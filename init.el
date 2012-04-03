@@ -90,7 +90,7 @@ displays, where dividing by half is not that useful."
 	 ;; input seems to be off by some number
 	 ;;(fudge 2) ;; correct for XEmacs
 	 ;; (fudge 7) ;; apparently correct for Emacs 21.4
-	 (fudge ) ;; apparently correct for Emacs 23.1 with scrollbars off
+	 (fudge 6) ;; apparently correct for Emacs 23.4 in my environment
 	 (m  2))
     
     ;; if arg negative, we want the remainder as a seperate window
