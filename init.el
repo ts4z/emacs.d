@@ -5,7 +5,8 @@
 ;;; global/general settings
 
 (defconst at-linkedin (not (null (string-match "\.linkedin\." (system-name)))))
-(defconst running-on-unix-p t)
+(defconst running-on-unix-p t
+  "Am I running on a Unix box?  I used to use Windows sometimes.")
 (defconst running-as-root-p (and running-on-unix-p (eq 0 (user-uid)))
   "Am I running as root?")
 
@@ -21,8 +22,9 @@
 (global-set-key [(control c) ?g]      'goto-line)
 (global-set-key [(control c) ?w]      'toggle-word-wrap)
 (global-set-key [(meta control backspace)] 'backward-kill-sexp)
+(global-set-key "\C-c6e" 'base64-encode-region)
+(global-set-key "\C-c6d" 'base64-decode-region)
 (menu-bar-mode 0)
-(mouse-wheel-mode 1)
 (put 'downcase-region 'disabled nil)
 (put 'eval-expression 'disabled nil)
 (put 'narrow-to-region 'disabled nil)
@@ -53,6 +55,9 @@
 
 (setq load-path (nconc (list "/usr/local/share/emacs/site-lisp/") load-path))
 
+;; if I let custom do this stuff, it screws up on ttys.  It has never
+;; worked quite right.  I state this in 2012.
+(set-face-font 'default "DejaVu Sans Mono 9")
 (set-face-foreground 'font-lock-builtin-face "brown")
 
 (defun other-window-previous (n &optional which-frames which-devices)
@@ -387,7 +392,6 @@ displays, where dividing by half is not that useful."
   ;; If you edit it by hand, you could mess it up, so be careful.
   ;; Your init file should contain only one such instance.
   ;; If there is more than one, they won't work right.
- '(default ((t (:inherit nil :stipple nil :background "white" :foreground "black" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 90 :width normal :foundry "unknown" :family "DejaVu Sans Mono"))))
  '(font-lock-builtin-face ((t (:foreground "#0000ff"))))
  '(font-lock-comment-face ((((class color) (min-colors 88) (background light)) (:foreground "#006600" :slant italic))))
  '(font-lock-doc-face ((t (:inherit font-lock-comment-face :background "grey98"))))
