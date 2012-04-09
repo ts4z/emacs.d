@@ -199,13 +199,18 @@ displays, where dividing by half is not that useful."
 
 ;; derived from emacswiki.org/emacs/HippieExpand with my initials added
 ;; and some minor cleanup.
+;;
 (defun tjs-tags-complete-tag (string predicate what)
   (require 'etags)                      ; tags-completion-table
-  (save-excursion
-    ;; If we need to ask for the tag table, allow that.
-    (if (eq what t)
-	(all-completions string (tags-completion-table) predicate)
-      (try-completion string (tags-completion-table) predicate))))
+  (if tags-completion-table
+      (save-excursion
+        ;; If we need to ask for the tag table, allow that.
+        ;; ... no, that's prevented by what's above.  if the tags table
+        ;; isn't loaded, reflex doesn't provide for loading it while
+        ;; thumping on M-/.
+        (if (eq what t)
+            (all-completions string (tags-completion-table) predicate)
+          (try-completion string (tags-completion-table) predicate)))))
 
 (defun tjs-try-expand-tag (old)
   (unless old
