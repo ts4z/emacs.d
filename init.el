@@ -24,15 +24,18 @@
 (global-set-key [(meta control backspace)] 'backward-kill-sexp)
 (global-set-key "\C-c6e" 'base64-encode-region)
 (global-set-key "\C-c6d" 'base64-decode-region)
-(menu-bar-mode 0)
+(global-unset-key "\C-z")               ; use C-x C-z instead
+(global-unset-key "\C-xf")              ; I never do this, but I mistype C-x C-f
+(menu-bar-mode 0)                       ; I never do this, but try C-mouse 3
 (put 'downcase-region 'disabled nil)
-(put 'eval-expression 'disabled nil)
+(put 'eval-expression 'disabled nil)    ; Does this still need to be enabled?
 (put 'narrow-to-region 'disabled nil)
 (put 'upcase-region 'disabled nil)
 (savehist-mode 1)
 (set-variable 'enable-local-eval 'query)
 (set-variable 'inhibit-startup-message t)
 (set-variable 'version-control t)
+(setq-default fill-column 79)
 (show-paren-mode 1)
 (tool-bar-mode 0)
 
@@ -69,7 +72,7 @@ direction."
 (global-set-key "\C-cp" 'other-window-previous)
 
 (defun find-tag-next ()
-  "Find the next tag, ala find-tag.  C-u M-. is too hard to type."
+  "Find the next tag, ala `find-tag'.  C-u M-. is too hard to type."
   (interactive)
   (find-tag nil t))
 ;; I like this, but ESC ESC is a historic holy key binding and this conflicts.
@@ -221,7 +224,25 @@ displays, where dividing by half is not that useful."
     (setq he-expand-list (cdr he-expand-list))
     t))
 
-(add-hook 'hippie-expand-try-functions-list 'tjs-try-expand-tag t)
+(add-hook 'hippie-expand-try-functions-list 'tjs-try-expand-tag nil)
+
+;; I don't like the default order of hippie-expand.  This reorders whatever
+;; is there to put the filename expansions at the end. 
+(require 'cl)                           ; gensym, copy-list
+(setq hippie-expand-try-functions-list
+      (let ((ordering (append
+                       `((try-expand-abbrevs . ,(gensym "a"))
+                         (try-expand-dabbrev . ,(gensym "a"))
+                         (tjs-try-expand-tag . ,(gensym "z"))
+                         (try-complete-file-name . ,(gensym "z"))
+                         (try-complete-file-name-partially . ,(gensym "z")))
+                       (mapcar (lambda (x) (cons x (gensym x)))
+                               hippie-expand-try-functions-list))))
+        ;; Emacs' sort is destructive.  But there is no reason to
+        ;; copy-list here except it makes debugging easier.
+        (sort (copy-list hippie-expand-try-functions-list)
+              (lambda (a b) (string< (cdr (assoc a ordering))
+                                     (cdr (assoc b ordering)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -371,6 +392,8 @@ displays, where dividing by half is not that useful."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; Appendix A. Custom
+;;;
+;;; Automated dreck.  Touch carefully, if at all.
 
 (custom-set-variables
   ;; custom-set-variables was added by Custom.
