@@ -24,6 +24,7 @@
 (global-set-key [(meta control backspace)] 'backward-kill-sexp)
 (global-set-key "\C-c6e" 'base64-encode-region)
 (global-set-key "\C-c6d" 'base64-decode-region)
+(global-subword-mode t)
 (global-unset-key "\C-z")               ; use C-x C-z instead
 (global-unset-key "\C-xf")              ; I never do this, but I mistype C-x C-f
 (menu-bar-mode 0)                       ; I never do this, but try C-mouse 3
@@ -60,7 +61,10 @@
 
 ;; if I let custom do this stuff, it screws up on ttys.  It has never
 ;; worked quite right.  I state this in 2012.
-(set-face-font 'default "DejaVu Sans Mono 9")
+
+(condition-case nil
+    (set-face-font 'default "DejaVu Sans Mono 9")
+  (error nil))
 (set-face-foreground 'font-lock-builtin-face "brown")
 
 (defun other-window-previous (n &optional which-frames which-devices)
@@ -195,7 +199,7 @@ displays, where dividing by half is not that useful."
 ;; hippie-expand
 ;;
 
-(global-set-key [(meta ?/)] 'hippie-expand)
+(global-set-key [(meta ??)] 'hippie-expand)
 
 ;; derived from emacswiki.org/emacs/HippieExpand with my initials added
 ;; and some minor cleanup.
@@ -349,7 +353,6 @@ displays, where dividing by half is not that useful."
 (add-hook 'cperl-mode-hook (lambda ()
 			     (cperl-set-style "K&R")
 			     (set-variable 'cperl-indent-level 4)))
-
 
 ;; this is fine, but C-c BS does the job, too.
 ;;(c-toggle-hungry-state 1)
