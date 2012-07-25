@@ -5,8 +5,7 @@
 ;;; global/general settings
 
 (defconst at-linkedin (not (null (string-match "\.linkedin\." (system-name)))))
-(defconst running-on-unix-p t
-  "Am I running on a Unix box?  I used to use Windows sometimes.")
+(defconst running-on-unix-p t)
 (defconst running-as-root-p (and running-on-unix-p (eq 0 (user-uid)))
   "Am I running as root?")
 
@@ -22,9 +21,10 @@
 (global-set-key [(control c) ?g]      'goto-line)
 (global-set-key [(control c) ?w]      'toggle-word-wrap)
 (global-set-key [(meta control backspace)] 'backward-kill-sexp)
-(global-set-key "\C-c6e" 'base64-encode-region)
-(global-set-key "\C-c6d" 'base64-decode-region)
+(global-unset-key [(control z)])        ; use C-x C-z if I must
+(global-unset-key [(control x) ?f])
 (menu-bar-mode 0)
+(mouse-wheel-mode 1)
 (put 'downcase-region 'disabled nil)
 (put 'eval-expression 'disabled nil)
 (put 'narrow-to-region 'disabled nil)
@@ -33,6 +33,8 @@
 (set-variable 'enable-local-eval 'query)
 (set-variable 'inhibit-startup-message t)
 (set-variable 'version-control t)
+(setq garbage-collection-messages t)    ; Hey, remember the '80s?
+(setq line-move-visual nil)             ; old skool
 (show-paren-mode 1)
 (tool-bar-mode 0)
 
@@ -55,9 +57,6 @@
 
 (setq load-path (nconc (list "/usr/local/share/emacs/site-lisp/") load-path))
 
-;; if I let custom do this stuff, it screws up on ttys.  It has never
-;; worked quite right.  I state this in 2012.
-(set-face-font 'default "DejaVu Sans Mono 9")
 (set-face-foreground 'font-lock-builtin-face "brown")
 
 (defun other-window-previous (n &optional which-frames which-devices)
@@ -338,6 +337,140 @@ displays, where dividing by half is not that useful."
 ;; 	     (apply #'first-file-that-exists rest)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Karl Fogel's transposition corrector, as posted to the Arcana list
+;; 24 jun 2012
+
+(defvar kf-fix-typo-current-failed-candidates ()
+  "Failed candidates so far in a consecutive series of automated typo fixes,
+e.g., across successive invocations of `kf-fix-previous-transposition'.
+
+The format is simply a list of the failures.  The first element in the
+list is always the original word -- that is, the one the user originally
+invoked the typo corrector on -- since by definition that word is a failure.")
+
+(defun kf-fix-typo-consider-candidate (candidate)
+  "Return non-nil iff current typo-fix CANDIDATE could succeed.
+This means it is a word, and has not been rejected previously by the user."
+  (and (gethash candidate kf-words)
+       (not (member candidate kf-fix-typo-current-failed-candidates))))
+
+(defun kf-previous-command-was-typo-fix-attempt ()
+  "Return non-nil iff the last command was one of the typo-fixing commands."
+  ;; As we have more, we'll add them.
+  (equal last-command 'kf-fix-previous-transposition))
+
+(defun kf-fix-previous-transposition ()
+  "Fix a single transposition in the previous word.
+Or if unable to find a single transposition to fix, then leave point
+in the middle of the previous word so the user can fix it by hand.
+The return value is currently undefined; do not depend on it.
+
+Repeated invocation with no intervening commands runs
+successively through the various potential fixes of the original
+word that are reachable via transposition; each successive
+attempt signals rejection of all previous candidates.  For example, if
+point is after \"baen\", the first invocation will produce \"bane\",
+then the next one will produce \"bean\", which might be the user's
+real target.
+
+TODO: This function could handle much more than in-word transposition:
+
+  Run the transposition across the previous *two* words.
+    (Often the typo is of the form, e.g., \"fis hfood\" when one
+    meant to type \"fish food\".  Expanding the window to two
+    words can fix that kind of typo too.  But note there's no
+    point expanding to three words: by the time it's happened
+    with two words the user has noticed it and is ready to run
+    the corrector.)
+
+  Else if transposing doesn't work, try eliminating one letter.
+    (Because a frequent typo is the insertion of a spurious letter.)
+
+  Else try adding each letter in each position.
+    (Because a frequent typo is to accidentally drop one letter.)
+
+  Else try adding a single space.
+    (Because a frequent typo is to fail to separate two words.  This
+    can re-use the check-two-words logic.)
+
+  Also, if something was done in an invocation, remember what it was
+  so that the next immediately successive invocation can undo it and
+  try the next technique on the list.  E.g., if it transposed two
+  chars but that turned out to be the wrong fix, then immediately
+  invoking the function again should undo the transposition and try
+  adding a letter instead; if that still produces the wrong word, then
+  undo it and try adding a single space."
+  (interactive)
+  (let* ((orig-pos    (point))
+         (word-first  (progn (forward-word -1) (point)))
+         (word-last   (progn (forward-word 1) (forward-char -1) (point)))
+         (word-past   (1+ word-last))
+         (word-now    (buffer-substring-no-properties
+                       word-first (1+ word-last)))
+         (orig-word   word-now)
+         (current-pos word-last)
+         (fixed-something nil))
+    (if (kf-previous-command-was-typo-fix-attempt)
+        (progn
+          ;; Restore the original word, since the point is to start
+          ;; the algorithm over from the beginning state (not some
+          ;; random intermediate state) but this time with a longer
+          ;; list of immediately rejectable candidates.
+          (delete-region word-first word-past)
+          (save-excursion
+            (goto-char word-first)
+            (insert (car kf-fix-typo-current-failed-candidates)))
+          (setq kf-fix-typo-current-failed-candidates
+                (append kf-fix-typo-current-failed-candidates
+                        (list word-now))))
+      ;; Else initialize the rejectables list with the current word.
+      (setq kf-fix-typo-current-failed-candidates (list word-now)))
+    (setq fixed-something
+          (catch 'fixed
+            (while (> current-pos word-first)
+              (goto-char current-pos)
+              (transpose-chars 1)
+              (setq word-now (buffer-substring-no-properties
+                              word-first word-past))
+              (if (kf-fix-typo-consider-candidate word-now)
+                  (throw 'fixed t)
+                ;; else undo the transpose chars
+                (forward-char -1)
+                (transpose-chars 1)
+                (setq current-pos (1- current-pos))))))
+    (if fixed-something
+        (goto-char orig-pos)
+      ;; If didn't manage to fix it, at least put point in the middle
+      ;; of the word, closer to where the user might manually fix it.
+      (goto-char (/ (+ word-first word-last) 2)))))
+
+
+(defconst kf-words
+  (let ((dict (make-hash-table :test 'equal :size 100000))
+        (word-source "/usr/share/dict/words"))
+    (when (file-exists-p word-source)
+      (save-excursion
+        (set-buffer (find-file-noselect word-source))
+        (goto-char (point-min))
+        (while (< (point) (point-max))
+          (let ((this-line-word (buffer-substring-no-properties
+                                 (point) (progn (end-of-line) (point)))))
+            (puthash this-line-word 0 dict)
+            (let ((capitalized (capitalize this-line-word))
+                  (upcased (upcase this-line-word)))
+              (when (not (string-equal capitalized this-line-word))
+                (puthash capitalized 0 dict))
+              (when (not (string-equal upcased this-line-word))
+                (puthash upcased 0 dict)))
+            (forward-line 1)))
+        (kill-buffer)))
+    dict)
+  "Hash table whose keys are English words and whose values are ignored.")
+
+(global-set-key [(control c) ?t] 'kf-fix-previous-transposition)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; Conclusion
 
@@ -392,6 +525,7 @@ displays, where dividing by half is not that useful."
   ;; If you edit it by hand, you could mess it up, so be careful.
   ;; Your init file should contain only one such instance.
   ;; If there is more than one, they won't work right.
+ '(default ((t (:inherit nil :stipple nil :background "white" :foreground "black" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 90 :width normal :foundry "unknown" :family "DejaVu Sans Mono"))))
  '(font-lock-builtin-face ((t (:foreground "#0000ff"))))
  '(font-lock-comment-face ((((class color) (min-colors 88) (background light)) (:foreground "#006600" :slant italic))))
  '(font-lock-doc-face ((t (:inherit font-lock-comment-face :background "grey98"))))
