@@ -36,11 +36,15 @@
 (set-variable 'enable-local-eval 'query)
 (set-variable 'inhibit-startup-message t)
 (set-variable 'version-control t)
-(setq garbage-collection-messages t)    ; Hey, remember the '80s?
+(set-variable 'enable-recursive-minibuffers t)
 (setq line-move-visual nil)             ; old skool
 (setq-default fill-column 79)
 (show-paren-mode 1)
 (tool-bar-mode 0)
+
+(let ((big-number 4000000))
+  (when (< gc-cons-threshold big-number)
+    (setq gc-cons-threshold big-number)))
 
 ;;; Environment
 
@@ -62,12 +66,21 @@
 (setq load-path (nconc (list "/usr/local/share/emacs/site-lisp/") load-path))
 
 ;; if I let custom do this stuff, it screws up on ttys.  It has never
-;; worked quite right.  I state this in 2012.
+;; worked quite right.  I state this in 2012.  Apparently I need to set backround to "light".
 
 (condition-case nil
     (set-face-font 'default "DejaVu Sans Mono 9")
   (error nil))
-(set-face-foreground 'font-lock-builtin-face "brown")
+(set-face-foreground 'font-lock-builtin-face "#ff00ff")
+(set-face-background 'default "light")
+(set-face-attribute 'font-lock-comment-face nil :foreground "#005500" :slant 'italic
+                    :background "light")
+(set-face-attribute 'font-lock-doc-face nil :inherit 'font-lock-common-face
+                    :background "light" :slant 'italic :foreground "brown")
+(set-face-attribute 'font-lock-function-name-face nil :foreground "red" :weight 'bold)
+(set-face-attribute 'font-lock-string-face nil :background "light"
+                    :foreground "darkgreen")
+
 
 (defun other-window-previous (n &optional which-frames which-devices)
   "Select the COUNT'th different (previous) window on this frame.
@@ -304,10 +317,11 @@ displays, where dividing by half is not that useful."
 (add-to-list 'interpreter-mode-alist '("groovy" . groovy-mode))
 
 ;; make Groovy mode electric by default.
-(add-hook 'groovy-mode-hook
-          '(lambda ()
-             (require 'groovy-electric)
-             (groovy-electric-mode)))
+;; no, wait, don't, that sucks
+;; (add-hook 'groovy-mode-hook
+;;           '(lambda ()
+;;              (require 'groovy-electric)
+;;              (groovy-electric-mode)))
 
 (add-hook 'groovy-mode-hook (lambda ()
                               (c-set-style "k&r")
@@ -319,7 +333,8 @@ displays, where dividing by half is not that useful."
                               (set-variable 'c-basic-offset 2)
                               (set-variable 'fill-column 79)
                               (set-variable 'indent-tabs-mode nil)
-                              (groovy-electric-mode nil)))
+                              ;; (groovy-electric-mode nil)
+                              ))
 
 ;; Java
 
@@ -334,7 +349,7 @@ displays, where dividing by half is not that useful."
 ;; Javascript
 (when at-linkedin
   (add-hook 'js-mode-hook (lambda ()
-			    (set-variable js-indent-level 2))))
+		    (set-variable 'js-indent-level 2))))
 
 ;; jsp
 (add-to-list 'auto-mode-alist '("\.jsp$" . sgml-mode))
@@ -371,6 +386,7 @@ displays, where dividing by half is not that useful."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Karl Fogel's transposition corrector, as posted to the Arcana list
+;; (probably redundant with flyspell, but flyspell makes me nervous)
 ;; 24 jun 2012
 
 (defvar kf-fix-typo-current-failed-candidates ()
@@ -554,15 +570,3 @@ TODO: This function could handle much more than in-word transposition:
  '(uniquify-buffer-name-style (quote forward) nil (uniquify))
  '(user-mail-address "tjs@psaux.com")
  '(visual-line-fringe-indicators (quote (nil nil))))
-(custom-set-faces
-  ;; custom-set-faces was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
- '(default ((t (:inherit nil :stipple nil :background "white" :foreground "black" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 90 :width normal :foundry "unknown" :family "DejaVu Sans Mono"))))
- '(font-lock-builtin-face ((t (:foreground "#0000ff"))))
- '(font-lock-comment-face ((((class color) (min-colors 88) (background light)) (:foreground "#006600" :slant italic))))
- '(font-lock-doc-face ((t (:inherit font-lock-comment-face :background "grey98"))))
- '(font-lock-function-name-face ((t (:foreground "red" :weight bold))))
- '(font-lock-keyword-face ((((class color) (min-colors 88) (background light)) (:foreground "Purple" :weight bold))))
- '(font-lock-string-face ((((class color) (min-colors 88) (background light)) (:background "grey97" :foreground "darkred")))))
