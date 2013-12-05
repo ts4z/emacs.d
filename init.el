@@ -14,25 +14,31 @@
 (define-key global-map (kbd "RET") 'newline-and-indent)
 (delete-selection-mode 1)
 (global-font-lock-mode 1)
+(global-unset-key [(control x) ?f])    ; I never do this, but I mistype C-x C-f
+(global-unset-key [(control z)])       ; use C-x C-z if I must
 (global-set-key "\C-c6d" 'base64-decode-region)
 (global-set-key "\C-c6e" 'base64-encode-region)
 (global-set-key [(control c) ?3]      'slice-window-horizontally)
 (global-set-key [(control c) ?\;]     'comment-region)
 (global-set-key [(control c) ?b]      'bury-buffer)
 (global-set-key [(control c) ?c]      'compile)
+(global-set-key [(control c) (shift d)] 'toggle-debug-on-error)
 (global-set-key [(control c) ?g]      'goto-line)
+(global-set-key [(control c) ?i]      'imenu)
+(global-set-key [(control c) ?l]      'tjs-insert-local-variable-template)
+(global-set-key [(control c) ?n]      'linum-mode)
 (global-set-key [(control c) ?w]      'toggle-word-wrap)
 (global-set-key [(meta control backspace)] 'backward-kill-sexp)
 (global-subword-mode t)
-(global-unset-key [(control x) ?f])    ; I never do this, but I mistype C-x C-f
-(global-unset-key [(control z)])       ; use C-x C-z if I must
+(global-set-key [(control z)] 'undo) ;the universe has decided C-z is undo
+(ido-mode t)
 (menu-bar-mode 0)                       ; I never do this, but try C-mouse 3
 (mouse-wheel-mode 1)
 (put 'downcase-region 'disabled nil)
 (put 'eval-expression 'disabled nil)    ; Does this still need to be enabled?
 (put 'narrow-to-region 'disabled nil)
 (put 'upcase-region 'disabled nil)
-(savehist-mode 1)
+(savehist-mode)
 (set-variable 'enable-local-eval 'query)
 (set-variable 'inhibit-startup-message t)
 (set-variable 'version-control t)
@@ -41,10 +47,21 @@
 (setq-default fill-column 79)
 (show-paren-mode 1)
 (tool-bar-mode 0)
+(which-function-mode t)
 
+
+;; GNU folks: You bastards. I tried to use set-variable.  Go fuck yourselves.
+;; Everybody else: Look at $EMACS_SOURCE/lisp/startup.el.
+(setq inhibit-startup-echo-area-message "tjs")
+(setq inhibit-startup-echo-area-message "tshowalt")
+
+;; bump up gc threshold.  as of 2013, it is 800k.  We can afford a little more.
 (let ((big-number 4000000))
-  (when (< gc-cons-threshold big-number)
-    (setq gc-cons-threshold big-number)))
+  (if (< gc-cons-threshold big-number)
+      (setq gc-cons-threshold big-number)
+    (run-with-idle-timer
+     30 nil #'message
+     "time to update the gc big-number in %s" user-init-file)))
 
 ;;; Environment
 
@@ -71,15 +88,22 @@
 (condition-case nil
     (set-face-font 'default "DejaVu Sans Mono 9")
   (error nil))
-(set-face-foreground 'font-lock-builtin-face "#ff00ff")
-(set-face-background 'default "light")
-(set-face-attribute 'font-lock-comment-face nil :foreground "#005500" :slant 'italic
-                    :background "light")
-(set-face-attribute 'font-lock-doc-face nil :inherit 'font-lock-common-face
-                    :background "light" :slant 'italic :foreground "brown")
-(set-face-attribute 'font-lock-function-name-face nil :foreground "red" :weight 'bold)
-(set-face-attribute 'font-lock-string-face nil :background "light"
-                    :foreground "darkgreen")
+
+;; on terminals, these colors are OK but Emacs does stupid things with
+;; backgrounds.  try not to define them -- the defaults are nice
+(let ((white-background-color "white"))
+  (set-face-foreground 'font-lock-builtin-face "#ff00ff")
+  ;; (set-face-background 'default white-background-color)
+  (set-face-attribute 'font-lock-comment-face nil :foreground "#005500"
+                      ;; :background white-background-color
+                      :slant 'italic)
+  (set-face-attribute 'font-lock-doc-face nil :inherit 'font-lock-common-face
+                      ;; :background white-background-color
+                      :slant 'italic :foreground "brown")
+  (set-face-attribute 'font-lock-function-name-face nil :foreground "red" :weight 'bold)
+  (set-face-attribute 'font-lock-string-face nil
+                      ;; :background white-background-color
+                      :foreground "darkgreen"))
 
 
 (defun other-window-previous (n &optional which-frames which-devices)
@@ -207,8 +231,6 @@ displays, where dividing by half is not that useful."
     (if edit-here (goto-char edit-here))
     (comment-region begin end)))
 
-(global-set-key [(control c) ?l] 'tjs-insert-local-variable-template)
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; hippie-expand
@@ -270,6 +292,15 @@ displays, where dividing by half is not that useful."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(setq-default save-place t)
+(require 'saveplace)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(require 'winner)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;;; Programming Language Configuration
 
 ;; C
@@ -314,6 +345,7 @@ displays, where dividing by half is not that useful."
 ;; use groovy-mode when file ends in .groovy or has #!/bin/groovy at start
 (autoload 'groovy-mode "groovy-mode" "Major mode for editing Groovy code." t)
 (add-to-list 'auto-mode-alist '("\.groovy$" . groovy-mode))
+(add-to-list 'auto-mode-alist '("\.gradle$" . groovy-mode))
 (add-to-list 'interpreter-mode-alist '("groovy" . groovy-mode))
 
 ;; make Groovy mode electric by default.
@@ -350,6 +382,10 @@ displays, where dividing by half is not that useful."
 (when at-linkedin
   (add-hook 'js-mode-hook (lambda ()
 		    (set-variable 'js-indent-level 2))))
+
+(add-to-list 'auto-mode-alist '("\.js$" . js-mode))
+(add-to-list 'auto-mode-alist '("\.avsc$" . js-mode))
+(add-to-list 'auto-mode-alist '("\.pdsc$" . js-mode))
 
 ;; jsp
 (add-to-list 'auto-mode-alist '("\.jsp$" . sgml-mode))
@@ -389,134 +425,134 @@ displays, where dividing by half is not that useful."
 ;; (probably redundant with flyspell, but flyspell makes me nervous)
 ;; 24 jun 2012
 
-(defvar kf-fix-typo-current-failed-candidates ()
-  "Failed candidates so far in a consecutive series of automated typo fixes,
-e.g., across successive invocations of `kf-fix-previous-transposition'.
+;; (defvar kf-fix-typo-current-failed-candidates ()
+;;   "Failed candidates so far in a consecutive series of automated typo fixes,
+;; e.g., across successive invocations of `kf-fix-previous-transposition'.
 
-The format is simply a list of the failures.  The first element in the
-list is always the original word -- that is, the one the user originally
-invoked the typo corrector on -- since by definition that word is a failure.")
+;; The format is simply a list of the failures.  The first element in the
+;; list is always the original word -- that is, the one the user originally
+;; invoked the typo corrector on -- since by definition that word is a failure.")
 
-(defun kf-fix-typo-consider-candidate (candidate)
-  "Return non-nil iff current typo-fix CANDIDATE could succeed.
-This means it is a word, and has not been rejected previously by the user."
-  (and (gethash candidate kf-words)
-       (not (member candidate kf-fix-typo-current-failed-candidates))))
+;; (defun kf-fix-typo-consider-candidate (candidate)
+;;   "Return non-nil iff current typo-fix CANDIDATE could succeed.
+;; This means it is a word, and has not been rejected previously by the user."
+;;   (and (gethash candidate kf-words)
+;;        (not (member candidate kf-fix-typo-current-failed-candidates))))
 
-(defun kf-previous-command-was-typo-fix-attempt ()
-  "Return non-nil iff the last command was one of the typo-fixing commands."
-  ;; As we have more, we'll add them.
-  (equal last-command 'kf-fix-previous-transposition))
+;; (defun kf-previous-command-was-typo-fix-attempt ()
+;;   "Return non-nil iff the last command was one of the typo-fixing commands."
+;;   ;; As we have more, we'll add them.
+;;   (equal last-command 'kf-fix-previous-transposition))
 
-(defun kf-fix-previous-transposition ()
-  "Fix a single transposition in the previous word.
-Or if unable to find a single transposition to fix, then leave point
-in the middle of the previous word so the user can fix it by hand.
-The return value is currently undefined; do not depend on it.
+;; (defun kf-fix-previous-transposition ()
+;;   "Fix a single transposition in the previous word.
+;; Or if unable to find a single transposition to fix, then leave point
+;; in the middle of the previous word so the user can fix it by hand.
+;; The return value is currently undefined; do not depend on it.
 
-Repeated invocation with no intervening commands runs
-successively through the various potential fixes of the original
-word that are reachable via transposition; each successive
-attempt signals rejection of all previous candidates.  For example, if
-point is after \"baen\", the first invocation will produce \"bane\",
-then the next one will produce \"bean\", which might be the user's
-real target.
+;; Repeated invocation with no intervening commands runs
+;; successively through the various potential fixes of the original
+;; word that are reachable via transposition; each successive
+;; attempt signals rejection of all previous candidates.  For example, if
+;; point is after \"baen\", the first invocation will produce \"bane\",
+;; then the next one will produce \"bean\", which might be the user's
+;; real target.
 
-TODO: This function could handle much more than in-word transposition:
+;; TODO: This function could handle much more than in-word transposition:
 
-  Run the transposition across the previous *two* words.
-    (Often the typo is of the form, e.g., \"fis hfood\" when one
-    meant to type \"fish food\".  Expanding the window to two
-    words can fix that kind of typo too.  But note there's no
-    point expanding to three words: by the time it's happened
-    with two words the user has noticed it and is ready to run
-    the corrector.)
+;;   Run the transposition across the previous *two* words.
+;;     (Often the typo is of the form, e.g., \"fis hfood\" when one
+;;     meant to type \"fish food\".  Expanding the window to two
+;;     words can fix that kind of typo too.  But note there's no
+;;     point expanding to three words: by the time it's happened
+;;     with two words the user has noticed it and is ready to run
+;;     the corrector.)
 
-  Else if transposing doesn't work, try eliminating one letter.
-    (Because a frequent typo is the insertion of a spurious letter.)
+;;   Else if transposing doesn't work, try eliminating one letter.
+;;     (Because a frequent typo is the insertion of a spurious letter.)
 
-  Else try adding each letter in each position.
-    (Because a frequent typo is to accidentally drop one letter.)
+;;   Else try adding each letter in each position.
+;;     (Because a frequent typo is to accidentally drop one letter.)
 
-  Else try adding a single space.
-    (Because a frequent typo is to fail to separate two words.  This
-    can re-use the check-two-words logic.)
+;;   Else try adding a single space.
+;;     (Because a frequent typo is to fail to separate two words.  This
+;;     can re-use the check-two-words logic.)
 
-  Also, if something was done in an invocation, remember what it was
-  so that the next immediately successive invocation can undo it and
-  try the next technique on the list.  E.g., if it transposed two
-  chars but that turned out to be the wrong fix, then immediately
-  invoking the function again should undo the transposition and try
-  adding a letter instead; if that still produces the wrong word, then
-  undo it and try adding a single space."
-  (interactive)
-  (let* ((orig-pos    (point))
-         (word-first  (progn (forward-word -1) (point)))
-         (word-last   (progn (forward-word 1) (forward-char -1) (point)))
-         (word-past   (1+ word-last))
-         (word-now    (buffer-substring-no-properties
-                       word-first (1+ word-last)))
-         (orig-word   word-now)
-         (current-pos word-last)
-         (fixed-something nil))
-    (if (kf-previous-command-was-typo-fix-attempt)
-        (progn
-          ;; Restore the original word, since the point is to start
-          ;; the algorithm over from the beginning state (not some
-          ;; random intermediate state) but this time with a longer
-          ;; list of immediately rejectable candidates.
-          (delete-region word-first word-past)
-          (save-excursion
-            (goto-char word-first)
-            (insert (car kf-fix-typo-current-failed-candidates)))
-          (setq kf-fix-typo-current-failed-candidates
-                (append kf-fix-typo-current-failed-candidates
-                        (list word-now))))
-      ;; Else initialize the rejectables list with the current word.
-      (setq kf-fix-typo-current-failed-candidates (list word-now)))
-    (setq fixed-something
-          (catch 'fixed
-            (while (> current-pos word-first)
-              (goto-char current-pos)
-              (transpose-chars 1)
-              (setq word-now (buffer-substring-no-properties
-                              word-first word-past))
-              (if (kf-fix-typo-consider-candidate word-now)
-                  (throw 'fixed t)
-                ;; else undo the transpose chars
-                (forward-char -1)
-                (transpose-chars 1)
-                (setq current-pos (1- current-pos))))))
-    (if fixed-something
-        (goto-char orig-pos)
-      ;; If didn't manage to fix it, at least put point in the middle
-      ;; of the word, closer to where the user might manually fix it.
-      (goto-char (/ (+ word-first word-last) 2)))))
+;;   Also, if something was done in an invocation, remember what it was
+;;   so that the next immediately successive invocation can undo it and
+;;   try the next technique on the list.  E.g., if it transposed two
+;;   chars but that turned out to be the wrong fix, then immediately
+;;   invoking the function again should undo the transposition and try
+;;   adding a letter instead; if that still produces the wrong word, then
+;;   undo it and try adding a single space."
+;;   (interactive)
+;;   (let* ((orig-pos    (point))
+;;          (word-first  (progn (forward-word -1) (point)))
+;;          (word-last   (progn (forward-word 1) (forward-char -1) (point)))
+;;          (word-past   (1+ word-last))
+;;          (word-now    (buffer-substring-no-properties
+;;                        word-first (1+ word-last)))
+;;          (orig-word   word-now)
+;;          (current-pos word-last)
+;;          (fixed-something nil))
+;;     (if (kf-previous-command-was-typo-fix-attempt)
+;;         (progn
+;;           ;; Restore the original word, since the point is to start
+;;           ;; the algorithm over from the beginning state (not some
+;;           ;; random intermediate state) but this time with a longer
+;;           ;; list of immediately rejectable candidates.
+;;           (delete-region word-first word-past)
+;;           (save-excursion
+;;             (goto-char word-first)
+;;             (insert (car kf-fix-typo-current-failed-candidates)))
+;;           (setq kf-fix-typo-current-failed-candidates
+;;                 (append kf-fix-typo-current-failed-candidates
+;;                         (list word-now))))
+;;       ;; Else initialize the rejectables list with the current word.
+;;       (setq kf-fix-typo-current-failed-candidates (list word-now)))
+;;     (setq fixed-something
+;;           (catch 'fixed
+;;             (while (> current-pos word-first)
+;;               (goto-char current-pos)
+;;               (transpose-chars 1)
+;;               (setq word-now (buffer-substring-no-properties
+;;                               word-first word-past))
+;;               (if (kf-fix-typo-consider-candidate word-now)
+;;                   (throw 'fixed t)
+;;                 ;; else undo the transpose chars
+;;                 (forward-char -1)
+;;                 (transpose-chars 1)
+;;                 (setq current-pos (1- current-pos))))))
+;;     (if fixed-something
+;;         (goto-char orig-pos)
+;;       ;; If didn't manage to fix it, at least put point in the middle
+;;       ;; of the word, closer to where the user might manually fix it.
+;;       (goto-char (/ (+ word-first word-last) 2)))))
 
 
-(defconst kf-words
-  (let ((dict (make-hash-table :test 'equal :size 100000))
-        (word-source "/usr/share/dict/words"))
-    (when (file-exists-p word-source)
-      (save-excursion
-        (set-buffer (find-file-noselect word-source))
-        (goto-char (point-min))
-        (while (< (point) (point-max))
-          (let ((this-line-word (buffer-substring-no-properties
-                                 (point) (progn (end-of-line) (point)))))
-            (puthash this-line-word 0 dict)
-            (let ((capitalized (capitalize this-line-word))
-                  (upcased (upcase this-line-word)))
-              (when (not (string-equal capitalized this-line-word))
-                (puthash capitalized 0 dict))
-              (when (not (string-equal upcased this-line-word))
-                (puthash upcased 0 dict)))
-            (forward-line 1)))
-        (kill-buffer)))
-    dict)
-  "Hash table whose keys are English words and whose values are ignored.")
+;; (defconst kf-words
+;;   (let ((dict (make-hash-table :test 'equal :size 100000))
+;;         (word-source "/usr/share/dict/words"))
+;;     (when (file-exists-p word-source)
+;;       (save-excursion
+;;         (set-buffer (find-file-noselect word-source))
+;;         (goto-char (point-min))
+;;         (while (< (point) (point-max))
+;;           (let ((this-line-word (buffer-substring-no-properties
+;;                                  (point) (progn (end-of-line) (point)))))
+;;             (puthash this-line-word 0 dict)
+;;             (let ((capitalized (capitalize this-line-word))
+;;                   (upcased (upcase this-line-word)))
+;;               (when (not (string-equal capitalized this-line-word))
+;;                 (puthash capitalized 0 dict))
+;;               (when (not (string-equal upcased this-line-word))
+;;                 (puthash upcased 0 dict)))
+;;             (forward-line 1)))
+;;         (kill-buffer)))
+;;     dict)
+;;   "Hash table whose keys are English words and whose values are ignored.")
 
-(global-set-key [(control c) ?t] 'kf-fix-previous-transposition)
+;; (global-set-key [(control c) ?t] 'kf-fix-previous-transposition)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -524,7 +560,7 @@ TODO: This function could handle much more than in-word transposition:
 
 (random t)
 (run-with-idle-timer
- 1 nil
+ (random 3600) nil
  (lambda ()
    (let ((msgs
 	  ["maze of twisty little"
