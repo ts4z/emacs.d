@@ -9,6 +9,9 @@
 (defconst running-as-root-p (and running-on-unix-p (eq 0 (user-uid)))
   "Am I running as root?")
 
+(require 'saveplace)
+(require 'winner)
+
 (blink-cursor-mode 1)
 ;; this is default since Emacs 21.  Yay progress!
 ;; (condition-case nil (resize-minibuffer-mode 1) (error nil))
@@ -52,9 +55,11 @@
 (setq x-select-enable-clipboard t)
 (setq x-select-enable-primary t)
 (setq-default fill-column 79)
+(setq-default save-place t)
 (show-paren-mode 1)
 (tool-bar-mode 0)
 (which-function-mode t)
+(winner-mode t)
 
 ;; GNU folks: You bastards. I tried to use set-variable.  It didn't work.
 ;; I couldn't figure out why.  Go fuck yourselves.
@@ -306,15 +311,6 @@ displays, where dividing by half is not that useful."
         (sort (copy-list hippie-expand-try-functions-list)
               (lambda (a b) (string< (cdr (assoc a ordering))
                                      (cdr (assoc b ordering)))))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(require 'saveplace)
-(setq-default save-place t)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(require 'winner)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
