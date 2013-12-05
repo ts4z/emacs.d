@@ -10,8 +10,11 @@
   "Am I running as root?")
 
 (blink-cursor-mode 1)
-(condition-case nil (resize-minibuffer-mode 1) (error nil))
+;; this is default since Emacs 21.  Yay progress!
+;; (condition-case nil (resize-minibuffer-mode 1) (error nil))
 (define-key global-map (kbd "RET") 'newline-and-indent)
+(define-key global-map "\e\e" 'eval-expression) ; 18.54 forever
+(define-key global-map [(control meta g)] 'keyboard-escape-quit)
 (delete-selection-mode 1)
 (global-font-lock-mode 1)
 (global-unset-key [(control x) ?f])    ; I never do this, but I mistype C-x C-f
@@ -28,10 +31,10 @@
 (global-set-key [(control c) ?l]      'tjs-insert-local-variable-template)
 (global-set-key [(control c) ?n]      'linum-mode)
 (global-set-key [(control c) ?w]      'toggle-word-wrap)
+(global-set-key [(control z)] 'undo) ;the universe has decided C-z is undo
 (global-set-key [(meta control backspace)] 'backward-kill-sexp)
 (global-subword-mode t)
-(global-set-key [(control z)] 'undo) ;the universe has decided C-z is undo
-(ido-mode t)
+;(ido-mode t)                           ;good idea, annoying impl quirks
 (menu-bar-mode 0)                       ; I never do this, but try C-mouse 3
 (mouse-wheel-mode 1)
 (put 'downcase-region 'disabled nil)
@@ -40,17 +43,21 @@
 (put 'upcase-region 'disabled nil)
 (savehist-mode)
 (set-variable 'enable-local-eval 'query)
+(set-variable 'enable-recursive-minibuffers t)
 (set-variable 'inhibit-startup-message t)
 (set-variable 'version-control t)
-(set-variable 'enable-recursive-minibuffers t)
+(setq ido-enable-flex-matching t)
 (setq line-move-visual nil)             ; old skool
+(setq save-interprogram-paste-before-kill t)
+(setq x-select-enable-clipboard t)
+(setq x-select-enable-primary t)
 (setq-default fill-column 79)
 (show-paren-mode 1)
 (tool-bar-mode 0)
 (which-function-mode t)
 
-
-;; GNU folks: You bastards. I tried to use set-variable.  Go fuck yourselves.
+;; GNU folks: You bastards. I tried to use set-variable.  It didn't work.
+;; I couldn't figure out why.  Go fuck yourselves.
 ;; Everybody else: Look at $EMACS_SOURCE/lisp/startup.el.
 (setq inhibit-startup-echo-area-message "tjs")
 (setq inhibit-startup-echo-area-message "tshowalt")
@@ -91,6 +98,8 @@
 
 ;; on terminals, these colors are OK but Emacs does stupid things with
 ;; backgrounds.  try not to define them -- the defaults are nice
+;;
+;; enable rainbow-mode before messing with this -- it's neat.
 (let ((white-background-color "white"))
   (set-face-foreground 'font-lock-builtin-face "#ff00ff")
   ;; (set-face-background 'default white-background-color)
@@ -184,21 +193,29 @@ displays, where dividing by half is not that useful."
 (defun mangle-line-endings-to-lf ()
   "Mangle all CRLF-ended lines to LF."
   (interactive)
-  (goto-char (point-min))
-  ;; Just convert everything to LF.  (I can't figure out how
-  ;; to do LF->CRLF conversion in a regex, so I won't use
-  ;; regexes to do this.  Yes, it ought to be easy, but
-  ;; replacing blank lines (which match across multiple
-  ;; matches) is hard!)
-  (replace-string "\r\n" "\n")
-  t)
+  (save-excursion
+    (save-restriction
+      (narrow-to-region (region-beginning) (region-end))
+      (goto-char (point-min))
+      ;; Just convert everything to LF.  (I can't figure out how
+      ;; to do LF->CRLF conversion in a regex, so I won't use
+      ;; regexes to do this.  Yes, it ought to be easy, but
+      ;; replacing blank lines (which match across multiple
+      ;; matches) is hard!)
+      (while (search-forward "\r\n" nil t)
+        (replace-match "\n" nil t))
+      t)))
 
 (defun mangle-line-endings-to-crlf ()
   "Mangle all CRLF-ended lines to LF."
   (interactive)
-  (goto-char (point-min))
-  (replace-string "\n" "\r\n")
-  t)
+  (save-excursion
+    (save-restriction
+      (narrow-to-region (region-beginning) (region-end))
+      (goto-char (point-min))
+      (while (re-search-forward "\\([^\r]\\)\n" nil t)
+        (replace-match (concat (match-string 1) "\r\n") nil t))
+      t)))
 
 ;; This is a hack, but not quite as huge a hack as when I first wrote it.
 (defun tjs-insert-local-variable-template ()
@@ -292,8 +309,8 @@ displays, where dividing by half is not that useful."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(setq-default save-place t)
 (require 'saveplace)
+(setq-default save-place t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -374,7 +391,7 @@ displays, where dividing by half is not that useful."
 	    (c-set-style "k&r")
 	    ;; this could be global, right?
 	    (c-set-offset 'inline-open 0)
-	    (set-variable 'c-basic-offset (cond (at-linkedin 2) 4))
+	    (set-variable 'c-basic-offset (cond (at-linkedin 2) (t 4)))
 	    (set-variable 'fill-column 79)
 	    (set-variable 'indent-tabs-mode nil)))
 
@@ -600,7 +617,6 @@ displays, where dividing by half is not that useful."
  '(indent-tabs-mode nil)
  '(mail-host-address "psaux.com")
  '(mail-user-agent (quote gnus-user-agent))
- '(save-place t nil (saveplace))
  '(show-paren-mode t)
  '(show-paren-style (quote expression))
  '(uniquify-buffer-name-style (quote forward) nil (uniquify))
