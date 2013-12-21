@@ -50,6 +50,7 @@
 (set-variable 'inhibit-startup-message t)
 (set-variable 'version-control t)
 (setq ido-enable-flex-matching t)
+(setq initial-scratch-message nil)
 (setq line-move-visual nil)             ; old skool
 (setq save-interprogram-paste-before-kill t)
 (setq x-select-enable-clipboard t)
@@ -86,16 +87,17 @@
 	(let ((dir (expand-file-name short-name)))
 	  (if (file-exists-p dir)
 	      (setq load-path (cons dir load-path)))))
+      (nreverse
 	(list "/usr/local/share/emacs/site-lisp/"
               "~/share/emacs/groovy"
 	      "~/share/emacs/slime"
 	      (concat (or (getenv "TJS_CVS")
-			  (concat (getenv "HOME") "/cvs-tjs")) "/elisp/")))
+			  (concat (getenv "HOME") "/cvs-tjs")) "/elisp/"))))
 
-(setq load-path (nconc (list "/usr/local/share/emacs/site-lisp/") load-path))
-
-;; if I let custom do this stuff, it screws up on ttys.  It has never
-;; worked quite right.  I state this in 2012.  Apparently I need to set backround to "light".
+;; if I let custom do this stuff, it screws up on ttys.  It has never worked
+;; quite right.  I state this in 2012, and it had not worked to my satisfaction
+;; since I discovered Emacs 19 in 1995.  Apparently I need to set backround to
+;; "light"?
 
 (condition-case nil
     (set-face-font 'default "DejaVu Sans Mono 9")
