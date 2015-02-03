@@ -441,8 +441,7 @@ displays, where dividing by half is not that useful."
   "Replace a region with the same contents, only URL decoded.
 
 lifted from
-http://www.blogbyben.com/2010/08/handy-emacs-function-url-decode-region.html
-"
+http://www.blogbyben.com/2010/08/handy-emacs-function-url-decode-region.html"
   (interactive "r")
   (let ((text (url-unhex-string (buffer-substring start end))))
     (delete-region start end)
