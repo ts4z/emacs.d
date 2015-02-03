@@ -434,6 +434,28 @@ displays, where dividing by half is not that useful."
 ;; 	(and rest
 ;; 	     (apply #'first-file-that-exists rest)))))
 
+;; URL crap
+;; http://www.blogbyben.com/2010/08/handy-emacs-function-url-decode-region.html
+
+(defun url-decode-region (start end)
+  "Replace a region with the same contents, only URL decoded.
+
+lifted from
+http://www.blogbyben.com/2010/08/handy-emacs-function-url-decode-region.html
+"
+  (interactive "r")
+  (let ((text (url-unhex-string (buffer-substring start end))))
+    (delete-region start end)
+    (insert text)))
+
+(defun url-encode-region (start end)
+  "Replace a region with the same contents, only URL encoded."
+  ;; yes, it's just the code above with a different encoder.
+  (interactive "r")
+  (let ((text (url-hexify-string (buffer-substring start end))))
+    (delete-region start end)
+    (insert text)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; Karl Fogel's transposition corrector, as posted to the Arcana list
