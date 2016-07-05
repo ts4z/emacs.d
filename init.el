@@ -126,7 +126,7 @@
 (condition-case nil
     (if running-on-mac-p
         (set-face-font 'fixed-pitch (font-spec :family "Courier"))
-      (set-face-font 'fixed-pitch "DejaVu Sans Mono 9"))
+      (set-face-font 'default "DejaVu Sans Mono 10"))
   (error nil))
 
 ;; on terminals, these colors are OK but Emacs does stupid things with
@@ -190,7 +190,7 @@ displays, where dividing by half is not that useful."
 	 (m  2))
     
     ;; if arg negative, we want the remainder as a seperate window
-    ;; if arg positive, combine remainder with last windwo
+    ;; if arg positive, combine remainder with last window
     (and (< w 0)
 	 (setq m 1)
 	 (setq w (- w)))
