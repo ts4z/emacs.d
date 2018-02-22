@@ -4,7 +4,16 @@
 
 ;;; global/general settings
 
-(defconst at-linkedin (not (null (string-match "\.linkedin\." (system-name)))))
+
+;; Added by Package.el.  This must come before configurations of
+;; installed packages.  Don't delete this line.  If you don't want it,
+;; just comment it out by adding a semicolon to the start of the line.
+;; You may delete these explanatory comments.
+(package-initialize)
+
+(add-to-list 'package-archives
+             '("melpa-stable" . "http://melpa-stable.milkbox.net/packages/") t)
+
 (defconst running-on-unix-p t)
 (defconst running-as-root-p (and running-on-unix-p (eq 0 (user-uid)))
   "Am I running as root?")
@@ -13,8 +22,6 @@
 (require 'winner)
 
 (blink-cursor-mode 1)
-;; this is default since Emacs 21.  Yay progress!
-;; (condition-case nil (resize-minibuffer-mode 1) (error nil))
 (define-key global-map (kbd "RET") 'newline-and-indent)
 (define-key global-map "\e\e" 'eval-expression) ; 18.54 forever
 (define-key global-map [(control meta g)] 'keyboard-escape-quit)
@@ -36,8 +43,8 @@
 (global-set-key [(control c) ?w]      'toggle-word-wrap)
 (global-set-key [(control z)] 'undo) ;the universe has decided C-z is undo
 (global-set-key [(meta control backspace)] 'backward-kill-sexp)
+(global-set-key (kbd "M-*") 'pop-tag-mark)
 (global-subword-mode t)
-;(ido-mode t)                           ;good idea, annoying impl quirks
 (menu-bar-mode 0)                       ; I never do this, but try C-mouse 3
 (mouse-wheel-mode 1)
 (put 'downcase-region 'disabled nil)
@@ -49,7 +56,6 @@
 (set-variable 'enable-recursive-minibuffers t)
 (set-variable 'inhibit-startup-message t)
 (set-variable 'version-control t)
-(setq ido-enable-flex-matching t)
 (setq initial-scratch-message nil)
 (setq line-move-visual nil)             ; old skool
 (setq save-interprogram-paste-before-kill t)
@@ -60,6 +66,7 @@
 (show-paren-mode 1)
 (tool-bar-mode 0)
 (which-function-mode t)
+(which-key-mode t)
 (winner-mode t)
 
 ;; GNU folks: You bastards. I tried to use set-variable.  It didn't work.
@@ -120,7 +127,6 @@
   (set-face-attribute 'font-lock-string-face nil
                       ;; :background white-background-color
                       :foreground "darkgreen"))
-
 
 (defun other-window-previous (n &optional which-frames which-devices)
   "Select the COUNT'th different (previous) window on this frame.
@@ -264,7 +270,6 @@ displays, where dividing by half is not that useful."
 
 ;; derived from emacswiki.org/emacs/HippieExpand with my initials added
 ;; and some minor cleanup.
-;;
 (defun tjs-tags-complete-tag (string predicate what)
   (require 'etags)                      ; tags-completion-table
   (if tags-completion-table
@@ -389,14 +394,9 @@ displays, where dividing by half is not that useful."
 	    (c-set-style "k&r")
 	    ;; this could be global, right?
 	    (c-set-offset 'inline-open 0)
-	    (set-variable 'c-basic-offset (cond (at-linkedin 2) (t 4)))
+	    (set-variable 'c-basic-offset 4)
 	    (set-variable 'fill-column 79)
 	    (set-variable 'indent-tabs-mode nil)))
-
-;; Javascript
-(when at-linkedin
-  (add-hook 'js-mode-hook (lambda ()
-		    (set-variable 'js-indent-level 2))))
 
 (add-to-list 'auto-mode-alist '("\.js$" . js-mode))
 (add-to-list 'auto-mode-alist '("\.avsc$" . js-mode))
@@ -433,6 +433,44 @@ displays, where dividing by half is not that useful."
 ;;     (or (and f (file-exists-p f) f)
 ;; 	(and rest
 ;; 	     (apply #'first-file-that-exists rest)))))
+
+;; Go
+
+;; need golang 1.9 on path?  can't depend on zshrc to do this; we might be
+;; running from display manager.
+(add-to-list 'exec-path "/usr/lib/golang-1.9/bin")
+
+;; need godef, etc., on path.
+;; can't trust shell setup to do this, as it may not get run
+;; if we're spawned from display manager.  (alas)
+;; 
+;; (this may not be an ideal setting, but we need to add at least
+;; one of them.)
+(add-to-list 'exec-path (expand-file-name "~/go/bin"))
+
+;; https://github.com/dominikh/go-mode.el
+;; says look at http://emacsredux.com/blog/2014/05/16/melpa-stable/
+
+(add-hook 'before-save-hook 'gofmt-before-save)
+
+(add-hook 'go-mode-hook (lambda ()
+                          (local-set-key (kbd "M-.") 'godef-jump)))
+
+(require 'go-eldoc)
+(add-hook 'go-mode-hook 'go-eldoc-setup)
+(require 'go-guru)
+(add-hook 'go-mode-hook #'go-guru-hl-identifier-mode)
+
+;; autocomplete
+(require 'go-autocomplete)
+(require 'auto-complete-config)
+(ac-config-default)
+
+(require 'go-eldoc)
+(add-hook 'go-mode-hook 'go-eldoc-setup)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; URL crap
 ;; http://www.blogbyben.com/2010/08/handy-emacs-function-url-decode-region.html
@@ -628,16 +666,25 @@ http://www.blogbyben.com/2010/08/handy-emacs-function-url-decode-region.html"
 ;;; Automated dreck.  Touch carefully, if at all.
 
 (custom-set-variables
-  ;; custom-set-variables was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
  '(cperl-invalid-face (quote default))
  '(indent-tabs-mode nil)
  '(mail-host-address "psaux.com")
  '(mail-user-agent (quote gnus-user-agent))
+ '(package-selected-packages
+   (quote
+    (go-rename go-playground go-guru go-errcheck go-eldoc go-autocomplete which-key markdown-mode magit go-mode json-mode rainbow-mode)))
  '(show-paren-mode t)
  '(show-paren-style (quote expression))
  '(uniquify-buffer-name-style (quote forward) nil (uniquify))
  '(user-mail-address "tjs@psaux.com")
  '(visual-line-fringe-indicators (quote (nil nil))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
