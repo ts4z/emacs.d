@@ -230,6 +230,19 @@ displays, where dividing by half is not that useful."
         (replace-match (concat (match-string 1) "\r\n") nil t))
       t)))
 
+(defun thats-not-meta ()
+  "Attach this function to keys that do things that might confuse.
+For instance, attach it to s-q, in case I forget which key is
+meta and which is super on which keyboard.  Because on the Mac,
+Command-Q might quit, but Meta-Q will fill-paragraph -- and
+getting the two confused is very frustrating."
+  (interactive)
+  (beep)
+  (message "That's not the meta key!!"))
+
+;; better rebind this on Mac, or fill reflexes cause editor exits.
+(global-set-key [(super q)] #'thats-not-meta)
+
 ;; This is a hack, but not quite as huge a hack as when I first wrote it.
 (defun tjs-insert-local-variable-template ()
   "tjs: insert the thing where local variables go at the bottom of the file."
@@ -457,7 +470,7 @@ displays, where dividing by half is not that useful."
                           (local-set-key (kbd "M-.") 'godef-jump)))
 
 (require 'go-eldoc)
-(add-hook 'go-mode-hook 'go-eldoc-setup)
+(add-hook 'go-mode-hook #'go-eldoc-setup)
 (require 'go-guru)
 (add-hook 'go-mode-hook #'go-guru-hl-identifier-mode)
 
@@ -493,140 +506,13 @@ http://www.blogbyben.com/2010/08/handy-emacs-function-url-decode-region.html"
     (delete-region start end)
     (insert text)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Karl Fogel's transposition corrector, as posted to the Arcana list
-;; (probably redundant with flyspell, but flyspell makes me nervous)
-;; 24 jun 2012
+(defun maybe-set-fill-column-to-72 ()
+  "Set the fill column to 72 some of the time, according to the whims of
+this method.  Mostly this is so git commits look nice when wrapped."
+  (when (eq (buffer-name) "COMMIT_EDITMSG")
+    (setq fill-column 72)))
 
-;; (defvar kf-fix-typo-current-failed-candidates ()
-;;   "Failed candidates so far in a consecutive series of automated typo fixes,
-;; e.g., across successive invocations of `kf-fix-previous-transposition'.
-
-;; The format is simply a list of the failures.  The first element in the
-;; list is always the original word -- that is, the one the user originally
-;; invoked the typo corrector on -- since by definition that word is a failure.")
-
-;; (defun kf-fix-typo-consider-candidate (candidate)
-;;   "Return non-nil iff current typo-fix CANDIDATE could succeed.
-;; This means it is a word, and has not been rejected previously by the user."
-;;   (and (gethash candidate kf-words)
-;;        (not (member candidate kf-fix-typo-current-failed-candidates))))
-
-;; (defun kf-previous-command-was-typo-fix-attempt ()
-;;   "Return non-nil iff the last command was one of the typo-fixing commands."
-;;   ;; As we have more, we'll add them.
-;;   (equal last-command 'kf-fix-previous-transposition))
-
-;; (defun kf-fix-previous-transposition ()
-;;   "Fix a single transposition in the previous word.
-;; Or if unable to find a single transposition to fix, then leave point
-;; in the middle of the previous word so the user can fix it by hand.
-;; The return value is currently undefined; do not depend on it.
-
-;; Repeated invocation with no intervening commands runs
-;; successively through the various potential fixes of the original
-;; word that are reachable via transposition; each successive
-;; attempt signals rejection of all previous candidates.  For example, if
-;; point is after \"baen\", the first invocation will produce \"bane\",
-;; then the next one will produce \"bean\", which might be the user's
-;; real target.
-
-;; TODO: This function could handle much more than in-word transposition:
-
-;;   Run the transposition across the previous *two* words.
-;;     (Often the typo is of the form, e.g., \"fis hfood\" when one
-;;     meant to type \"fish food\".  Expanding the window to two
-;;     words can fix that kind of typo too.  But note there's no
-;;     point expanding to three words: by the time it's happened
-;;     with two words the user has noticed it and is ready to run
-;;     the corrector.)
-
-;;   Else if transposing doesn't work, try eliminating one letter.
-;;     (Because a frequent typo is the insertion of a spurious letter.)
-
-;;   Else try adding each letter in each position.
-;;     (Because a frequent typo is to accidentally drop one letter.)
-
-;;   Else try adding a single space.
-;;     (Because a frequent typo is to fail to separate two words.  This
-;;     can re-use the check-two-words logic.)
-
-;;   Also, if something was done in an invocation, remember what it was
-;;   so that the next immediately successive invocation can undo it and
-;;   try the next technique on the list.  E.g., if it transposed two
-;;   chars but that turned out to be the wrong fix, then immediately
-;;   invoking the function again should undo the transposition and try
-;;   adding a letter instead; if that still produces the wrong word, then
-;;   undo it and try adding a single space."
-;;   (interactive)
-;;   (let* ((orig-pos    (point))
-;;          (word-first  (progn (forward-word -1) (point)))
-;;          (word-last   (progn (forward-word 1) (forward-char -1) (point)))
-;;          (word-past   (1+ word-last))
-;;          (word-now    (buffer-substring-no-properties
-;;                        word-first (1+ word-last)))
-;;          (orig-word   word-now)
-;;          (current-pos word-last)
-;;          (fixed-something nil))
-;;     (if (kf-previous-command-was-typo-fix-attempt)
-;;         (progn
-;;           ;; Restore the original word, since the point is to start
-;;           ;; the algorithm over from the beginning state (not some
-;;           ;; random intermediate state) but this time with a longer
-;;           ;; list of immediately rejectable candidates.
-;;           (delete-region word-first word-past)
-;;           (save-excursion
-;;             (goto-char word-first)
-;;             (insert (car kf-fix-typo-current-failed-candidates)))
-;;           (setq kf-fix-typo-current-failed-candidates
-;;                 (append kf-fix-typo-current-failed-candidates
-;;                         (list word-now))))
-;;       ;; Else initialize the rejectables list with the current word.
-;;       (setq kf-fix-typo-current-failed-candidates (list word-now)))
-;;     (setq fixed-something
-;;           (catch 'fixed
-;;             (while (> current-pos word-first)
-;;               (goto-char current-pos)
-;;               (transpose-chars 1)
-;;               (setq word-now (buffer-substring-no-properties
-;;                               word-first word-past))
-;;               (if (kf-fix-typo-consider-candidate word-now)
-;;                   (throw 'fixed t)
-;;                 ;; else undo the transpose chars
-;;                 (forward-char -1)
-;;                 (transpose-chars 1)
-;;                 (setq current-pos (1- current-pos))))))
-;;     (if fixed-something
-;;         (goto-char orig-pos)
-;;       ;; If didn't manage to fix it, at least put point in the middle
-;;       ;; of the word, closer to where the user might manually fix it.
-;;       (goto-char (/ (+ word-first word-last) 2)))))
-
-
-;; (defconst kf-words
-;;   (let ((dict (make-hash-table :test 'equal :size 100000))
-;;         (word-source "/usr/share/dict/words"))
-;;     (when (file-exists-p word-source)
-;;       (save-excursion
-;;         (set-buffer (find-file-noselect word-source))
-;;         (goto-char (point-min))
-;;         (while (< (point) (point-max))
-;;           (let ((this-line-word (buffer-substring-no-properties
-;;                                  (point) (progn (end-of-line) (point)))))
-;;             (puthash this-line-word 0 dict)
-;;             (let ((capitalized (capitalize this-line-word))
-;;                   (upcased (upcase this-line-word)))
-;;               (when (not (string-equal capitalized this-line-word))
-;;                 (puthash capitalized 0 dict))
-;;               (when (not (string-equal upcased this-line-word))
-;;                 (puthash upcased 0 dict)))
-;;             (forward-line 1)))
-;;         (kill-buffer)))
-;;     dict)
-;;   "Hash table whose keys are English words and whose values are ignored.")
-
-;; (global-set-key [(control c) ?t] 'kf-fix-previous-transposition)
+(add-hook 'text-mode-hook #'maybe-set-fill-column-to-72)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -655,14 +541,14 @@ http://www.blogbyben.com/2010/08/handy-emacs-function-url-decode-region.html"
 (server-start)
 
 ;; Yow!  Legally-imposed CULTURE-reduction is CABBAGE-BRAINED!
-(let ((yow "~/.emacs.d/yow.lines"))
-  (when (file-exists-p (expand-file-name yow))
-    (setq yow-file yow)))
+;; This doesn't work; yow has been expunged.
+;; (let ((yow "~/.emacs.d/yow.lines"))
+;;   (when (file-exists-p (expand-file-name yow))
+;;     (setq yow-file yow)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; Appendix A. Custom
-;;;
 ;;; Automated dreck.  Touch carefully, if at all.
 
 (custom-set-variables
@@ -670,18 +556,19 @@ http://www.blogbyben.com/2010/08/handy-emacs-function-url-decode-region.html"
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(cperl-invalid-face (quote default))
+ '(cperl-invalid-face 'default)
  '(indent-tabs-mode nil)
  '(mail-host-address "psaux.com")
- '(mail-user-agent (quote gnus-user-agent))
+ '(mail-user-agent 'gnus-user-agent)
+ '(ns-alternate-modifier 'super)
+ '(ns-command-modifier 'meta)
  '(package-selected-packages
-   (quote
-    (go-rename go-playground go-guru go-errcheck go-eldoc go-autocomplete which-key markdown-mode magit go-mode json-mode rainbow-mode)))
+   '(go-rename go-playground go-guru go-errcheck go-eldoc go-autocomplete which-key markdown-mode magit go-mode json-mode rainbow-mode))
  '(show-paren-mode t)
- '(show-paren-style (quote expression))
- '(uniquify-buffer-name-style (quote forward) nil (uniquify))
+ '(show-paren-style 'expression)
+ '(uniquify-buffer-name-style 'forward nil (uniquify))
  '(user-mail-address "tjs@psaux.com")
- '(visual-line-fringe-indicators (quote (nil nil))))
+ '(visual-line-fringe-indicators '(nil nil)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
