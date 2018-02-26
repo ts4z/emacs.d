@@ -14,10 +14,6 @@
 (add-to-list 'package-archives
              '("melpa-stable" . "http://melpa-stable.milkbox.net/packages/") t)
 
-(defconst running-on-unix-p t)
-(defconst running-as-root-p (and running-on-unix-p (eq 0 (user-uid)))
-  "Am I running as root?")
-
 (require 'saveplace)
 (require 'winner)
 
@@ -73,7 +69,7 @@
 ;; I couldn't figure out why.  Go fuck yourselves.
 ;; Everybody else: Look at $EMACS_SOURCE/lisp/startup.el.
 (setq inhibit-startup-echo-area-message "tjs")
-(setq inhibit-startup-echo-area-message "tshowalt")
+(setq inhibit-startup-echo-area-message "timshowalter")
 
 ;; bump up gc threshold.  as of 2013, it is 800k.  We can afford a little more.
 (let ((big-number 4000000))
@@ -376,17 +372,9 @@ getting the two confused is very frustrating."
 ;;; Groovy
 
 ;; use groovy-mode when file ends in .groovy or has #!/bin/groovy at start
-(autoload 'groovy-mode "groovy-mode" "Major mode for editing Groovy code." t)
 (add-to-list 'auto-mode-alist '("\.groovy$" . groovy-mode))
 (add-to-list 'auto-mode-alist '("\.gradle$" . groovy-mode))
 (add-to-list 'interpreter-mode-alist '("groovy" . groovy-mode))
-
-;; make Groovy mode electric by default.
-;; no, wait, don't, that sucks
-;; (add-hook 'groovy-mode-hook
-;;           '(lambda ()
-;;              (require 'groovy-electric)
-;;              (groovy-electric-mode)))
 
 (add-hook 'groovy-mode-hook (lambda ()
                               (c-set-style "k&r")
