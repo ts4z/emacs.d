@@ -497,7 +497,7 @@ http://www.blogbyben.com/2010/08/handy-emacs-function-url-decode-region.html"
 (defun maybe-set-fill-column-to-72 ()
   "Set the fill column to 72 some of the time, according to the whims of
 this method.  Mostly this is so git commits look nice when wrapped."
-  (when (eq (buffer-name) "COMMIT_EDITMSG")
+  (when (member (buffer-name) '("COMMIT_EDITMSG" "*vc-log*"))
     (setq fill-column 72)))
 
 (add-hook 'text-mode-hook #'maybe-set-fill-column-to-72)
