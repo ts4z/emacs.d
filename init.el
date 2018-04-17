@@ -30,6 +30,7 @@
 (global-set-key [(control c) ?v ?l] 'magit-log)
 (global-set-key [(control c) ?v ?a] 'magit-stage)
 (global-set-key [(control c) ?v ?b] 'magit-blame)
+(global-set-key [(control c) ?v ?v] 'magit-commit)
 (global-set-key "\C-c6d" 'base64-decode-region)
 (global-set-key "\C-c6e" 'base64-encode-region)
 (global-set-key [(control ?\\)] 'align-regexp)
@@ -102,6 +103,7 @@
       (nreverse
        (list "/usr/local/share/emacs/site-lisp/"
 	     "~/share/emacs/slime"
+             ;; use my yaml mode from this path; it has a bug fix (4/2018)
              "~/git/yaml-mode"
 	     (concat (or (getenv "TJS_CVS")
 			 (concat (getenv "HOME") "/cvs-tjs")) "/elisp/"))))
@@ -484,31 +486,6 @@ getting the two confused is very frustrating."
 
 (require 'go-eldoc)
 (add-hook 'go-mode-hook 'go-eldoc-setup)
-
-;; yaml hack.  should send this upstream.  yaml's fill-paragraph does a pretty
-;; terrible job in a lot of cases.  need to require yaml-mode up front so we
-;; can patch it.
-;;
-;; commented out so I can try and send this upstream.
-;;
-;; (require 'yaml-mode)
-;; (defun yaml-fill-paragraph (&optional justify region)
-;;   "Fill paragraph.
-;; This behaves as `fill-paragraph' except that filling does not
-;; cross boundaries of block literals.
-
-;; This is mostly the same as the one in yaml-mode, except we try
-;; fill-comment-paragraph first, and if it says it did the work,
-;; we're done.  This is as per the fill function for lisp-mode.
-;; Paragraph breaks within comments are preserved, and we don't pick
-;; up other random bits of data, either.
-;; "
-;;   (interactive "*P")
-;;   (save-restriction
-;;     (yaml-narrow-to-block-literal)
-;;     (let ((fill-paragraph-function nil))
-;;       (or (fill-comment-paragraph justify)
-;;           (fill-paragraph justify region)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
