@@ -2,20 +2,20 @@
 ;;;; ts4z emacs.el -- GNU Emacs flavor
 ;;;;
 
-;;; global/general settings
-
-
-;; Added by Package.el.  This must come before configurations of
-;; installed packages.  Don't delete this line.  If you don't want it,
-;; just comment it out by adding a semicolon to the start of the line.
-;; You may delete these explanatory comments.
+;; required by package.el
 (package-initialize)
+
+;;; global/general settings
 
 (add-to-list 'package-archives
              '("melpa-stable" . "http://melpa-stable.milkbox.net/packages/") t)
 
 (require 'saveplace)
 (require 'winner)
+
+(defconst running-on-mac-p
+  "Are we running on a Mac?"
+  (when (equal system-type "darwin")))
 
 (blink-cursor-mode 1)
 (define-key global-map (kbd "RET") 'newline-and-indent)
@@ -25,23 +25,31 @@
 (global-font-lock-mode 1)
 (global-unset-key [(control x) ?f])    ; I never do this, but I mistype C-x C-f
 (global-unset-key [(control z)])       ; use C-x C-z if I must
+(global-set-key [(control c) ?v ?s] 'magit-status)
+(global-set-key [(control c) ?v ?=] 'magit-diff)
+(global-set-key [(control c) ?v ?l] 'magit-log)
+(global-set-key [(control c) ?v ?a] 'magit-stage)
+(global-set-key [(control c) ?v ?b] 'magit-blame)
 (global-set-key "\C-c6d" 'base64-decode-region)
 (global-set-key "\C-c6e" 'base64-encode-region)
-(global-set-key [(control c) ?3]      'slice-window-horizontally)
-(global-set-key [(control c) ?\;]     'comment-region)
-(global-set-key [(control c) ?b]      'bury-buffer)
-(global-set-key [(control c) ?c]      'compile)
+(global-set-key [(control ?\\)] 'align-regexp)
+(global-set-key [(control c) ?3]        'slice-window-horizontally)
+(global-set-key [(control c) ?\;]       'comment-region)
+(global-set-key [(control c) ?b]        'bury-buffer)
+(global-set-key [(control c) ?c]        'compile)
 (global-set-key [(control c) (shift d)] 'toggle-debug-on-error)
-(global-set-key [(control c) ?g]      'goto-line)
-(global-set-key [(control c) ?i]      'imenu)
-(global-set-key [(control c) ?l]      'tjs-insert-local-variable-template)
-(global-set-key [(control c) ?n]      'linum-mode)
-(global-set-key [(control c) ?w]      'toggle-word-wrap)
+(global-set-key [(control c) ?g]        'goto-line)
+(global-set-key [(control c) ?i]        'imenu)
+(global-set-key [(control c) ?l]        'tjs-insert-local-variable-template)
+(global-set-key [(control c) ?n]        'linum-mode)
+(global-set-key [(control c) ?w]        'toggle-word-wrap)
 (global-set-key [(control z)] 'undo) ;the universe has decided C-z is undo
 (global-set-key [(meta control backspace)] 'backward-kill-sexp)
 (global-set-key (kbd "M-*") 'pop-tag-mark)
+(global-set-key (kbd "M-_") 'text-scale-decrease)
+(global-set-key (kbd "M-+") 'text-scale-increase)
 (global-subword-mode t)
-(menu-bar-mode 0)                       ; I never do this, but try C-mouse 3
+(add-hook 'tty-setup-hook (lambda () (menu-bar-mode -1)))
 (mouse-wheel-mode 1)
 (put 'downcase-region 'disabled nil)
 (put 'eval-expression 'disabled nil)    ; Does this still need to be enabled?
@@ -52,12 +60,12 @@
 (set-variable 'enable-recursive-minibuffers t)
 (set-variable 'inhibit-startup-message t)
 (set-variable 'version-control t)
+(setq garbage-collection-messages t)    ; old skool
 (setq initial-scratch-message nil)
 (setq line-move-visual nil)             ; old skool
 (setq save-interprogram-paste-before-kill t)
 (setq x-select-enable-clipboard t)
 (setq x-select-enable-primary t)
-(setq-default fill-column 79)
 (setq-default save-place t)
 (show-paren-mode 1)
 (tool-bar-mode 0)
@@ -65,13 +73,14 @@
 (which-key-mode t)
 (winner-mode t)
 
-;; GNU folks: You bastards. I tried to use set-variable.  It didn't work.
-;; I couldn't figure out why.  Go fuck yourselves.
-;; Everybody else: Look at $EMACS_SOURCE/lisp/startup.el.
-(setq inhibit-startup-echo-area-message "tjs")
-(setq inhibit-startup-echo-area-message "timshowalter")
+;; Disable startup-time message in echo area.  Do this the ugly way, because
+;; GNU thinks it's so important that they made it difficult to disable.
+;;
+;; https://github.com/emacs-mirror/emacs/blob/450b0d1c0dabc2a9f4a5e63db87590e9681b9319/lisp/startup.el#L84
+(defun display-startup-echo-area-message ())
 
-;; bump up gc threshold.  as of 2013, it is 800k.  We can afford a little more.
+;; bump up gc threshold.  as of 2018, it is still 800k.  We can afford a little
+;; more.
 (let ((big-number 4000000))
   (if (< gc-cons-threshold big-number)
       (setq gc-cons-threshold big-number)
@@ -91,19 +100,19 @@
 	  (if (file-exists-p dir)
 	      (setq load-path (cons dir load-path)))))
       (nreverse
-	(list "/usr/local/share/emacs/site-lisp/"
-              "~/share/emacs/groovy"
-	      "~/share/emacs/slime"
-	      (concat (or (getenv "TJS_CVS")
-			  (concat (getenv "HOME") "/cvs-tjs")) "/elisp/"))))
+       (list "/usr/local/share/emacs/site-lisp/"
+	     "~/share/emacs/slime"
+             "~/git/yaml-mode"
+	     (concat (or (getenv "TJS_CVS")
+			 (concat (getenv "HOME") "/cvs-tjs")) "/elisp/"))))
 
-;; if I let custom do this stuff, it screws up on ttys.  It has never worked
-;; quite right.  I state this in 2012, and it had not worked to my satisfaction
-;; since I discovered Emacs 19 in 1995.  Apparently I need to set backround to
-;; "light"?
 
+;; Can custom be trusted not to do this on ttys?  We shall see.
+;; Untested (but maybe OK on Macs and might work on X11)
 (condition-case nil
-    (set-face-font 'default "DejaVu Sans Mono 9")
+    (if running-on-mac-p
+        (set-face-font 'fixed-pitch (font-spec :family "Courier"))
+      (set-face-font 'fixed-pitch "DejaVu Sans Mono 9"))
   (error nil))
 
 ;; on terminals, these colors are OK but Emacs does stupid things with
@@ -111,15 +120,15 @@
 ;;
 ;; enable rainbow-mode before messing with this -- it's neat.
 (let ((white-background-color "white"))
-  (set-face-foreground 'font-lock-builtin-face "#ff00ff")
+  (set-face-foreground 'font-lock-builtin-face "#990066")
   ;; (set-face-background 'default white-background-color)
-  (set-face-attribute 'font-lock-comment-face nil :foreground "#005500"
+  (set-face-attribute 'font-lock-comment-face nil :foreground "#668866"
                       ;; :background white-background-color
                       :slant 'italic)
   (set-face-attribute 'font-lock-doc-face nil :inherit 'font-lock-common-face
                       ;; :background white-background-color
                       :slant 'italic :foreground "brown")
-  (set-face-attribute 'font-lock-function-name-face nil :foreground "red" :weight 'bold)
+  (set-face-attribute 'font-lock-function-name-face nil :foreground "Brown")
   (set-face-attribute 'font-lock-string-face nil
                       ;; :background white-background-color
                       :foreground "darkgreen"))
@@ -372,8 +381,8 @@ getting the two confused is very frustrating."
 ;;; Groovy
 
 ;; use groovy-mode when file ends in .groovy or has #!/bin/groovy at start
-(add-to-list 'auto-mode-alist '("\.groovy$" . groovy-mode))
-(add-to-list 'auto-mode-alist '("\.gradle$" . groovy-mode))
+(add-to-list 'auto-mode-alist '("\\.groovy$" . groovy-mode))
+(add-to-list 'auto-mode-alist '("\\.gradle$" . groovy-mode))
 (add-to-list 'interpreter-mode-alist '("groovy" . groovy-mode))
 
 (add-hook 'groovy-mode-hook (lambda ()
@@ -399,12 +408,11 @@ getting the two confused is very frustrating."
 	    (set-variable 'fill-column 79)
 	    (set-variable 'indent-tabs-mode nil)))
 
-(add-to-list 'auto-mode-alist '("\.js$" . js-mode))
-(add-to-list 'auto-mode-alist '("\.avsc$" . js-mode))
-(add-to-list 'auto-mode-alist '("\.pdsc$" . js-mode))
+(add-to-list 'auto-mode-alist '("\\.js$" . js-mode))
 
-;; jsp
-(add-to-list 'auto-mode-alist '("\.jsp$" . sgml-mode))
+;; json
+(add-to-list 'auto-mode-alist '("\\.avsc$" . json-mode))
+(add-to-list 'auto-mode-alist '("\\.pdsc$" . json-mode))
 
 ;; Lisp
 
@@ -426,20 +434,27 @@ getting the two confused is very frustrating."
 ;; this is fine, but C-c BS does the job, too.
 ;;(c-toggle-hungry-state 1)
 
-;; (defun first-file-that-exists (&rest args)
-;;   "tjs: Return the first argument that `file-exists-p', or nil."
-;;   (message (format "called with: %s" args))
-;;   (let ((f (car args))
-;; 	(rest (cdr args)))
-;;     (or (and f (file-exists-p f) f)
-;; 	(and rest
-;; 	     (apply #'first-file-that-exists rest)))))
+(defun first-file-that-exists (&rest args)
+  "tjs: Return the first argument that `file-exists-p', or nil."
+  ;; (message (format "called with: %s" args))
+  (let ((f (car args))
+	(rest (cdr args)))
+    (or (and f (file-exists-p f) f)
+	(and rest
+	     (apply #'first-file-that-exists rest)))))
 
 ;; Go
 
-;; need golang 1.9 on path?  can't depend on zshrc to do this; we might be
-;; running from display manager.
-(add-to-list 'exec-path "/usr/lib/golang-1.9/bin")
+;; need 'go' on path?  can't depend on zshrc to do this; we might be
+;; running from display manager or Mac or something else that can't
+;; set $PATH properly.
+(let ((gobin (first-file-that-exists "/usr/lib/golang-1.10/bin"
+                                     "/usr/lib/golang-1.9/bin")))
+  (when gobin
+    (add-to-list 'exec-path gobin)))
+
+;; Go in /usr/local/bin on Mac (via Homebrew)
+(add-to-list 'exec-path "/usr/local/bin")
 
 ;; need godef, etc., on path.
 ;; can't trust shell setup to do this, as it may not get run
@@ -470,6 +485,30 @@ getting the two confused is very frustrating."
 (require 'go-eldoc)
 (add-hook 'go-mode-hook 'go-eldoc-setup)
 
+;; yaml hack.  should send this upstream.  yaml's fill-paragraph does a pretty
+;; terrible job in a lot of cases.  need to require yaml-mode up front so we
+;; can patch it.
+;;
+;; commented out so I can try and send this upstream.
+;;
+;; (require 'yaml-mode)
+;; (defun yaml-fill-paragraph (&optional justify region)
+;;   "Fill paragraph.
+;; This behaves as `fill-paragraph' except that filling does not
+;; cross boundaries of block literals.
+
+;; This is mostly the same as the one in yaml-mode, except we try
+;; fill-comment-paragraph first, and if it says it did the work,
+;; we're done.  This is as per the fill function for lisp-mode.
+;; Paragraph breaks within comments are preserved, and we don't pick
+;; up other random bits of data, either.
+;; "
+;;   (interactive "*P")
+;;   (save-restriction
+;;     (yaml-narrow-to-block-literal)
+;;     (let ((fill-paragraph-function nil))
+;;       (or (fill-comment-paragraph justify)
+;;           (fill-paragraph justify region)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -494,17 +533,26 @@ http://www.blogbyben.com/2010/08/handy-emacs-function-url-decode-region.html"
     (delete-region start end)
     (insert text)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; fill column -- I prefer 79 in general, sort of.
+
 (defun maybe-set-fill-column-to-72 ()
   "Set the fill column to 72 some of the time, according to the whims of
 this method.  Mostly this is so git commits look nice when wrapped."
   (when (member (buffer-name) '("COMMIT_EDITMSG" "*vc-log*"))
     (setq fill-column 72)))
 
+(setq-default fill-column 79)
 (add-hook 'text-mode-hook #'maybe-set-fill-column-to-72)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; Conclusion
+
+;; put Go back on the path, because apparently we didn't do that
+;; by just modifying exec-path, no no no.
+(setenv "PATH" (mapconcat 'identity exec-path ":"))
 
 (random t)
 (run-with-idle-timer
@@ -551,7 +599,7 @@ this method.  Mostly this is so git commits look nice when wrapped."
  '(ns-alternate-modifier 'super)
  '(ns-command-modifier 'meta)
  '(package-selected-packages
-   '(go-rename go-playground go-guru go-errcheck go-eldoc go-autocomplete which-key markdown-mode magit go-mode json-mode rainbow-mode))
+   '(hound terraform-mode minimap minimal-session-saver ac-emoji go-rename go-playground go-guru go-errcheck go-eldoc go-autocomplete which-key markdown-mode magit go-mode json-mode rainbow-mode))
  '(show-paren-mode t)
  '(show-paren-style 'expression)
  '(uniquify-buffer-name-style 'forward nil (uniquify))
