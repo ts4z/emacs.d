@@ -2,8 +2,13 @@
 ;;;; ts4z emacs.el -- GNU Emacs flavor
 ;;;;
 
+(let ((package-enable-at-startup nil))
+  ;; apparently no longer required, but here so this works cross-platform while
+  ;; we move slowly into the future.
+
 ;; required by package.el
 (package-initialize)
+)  
 
 ;;; global/general settings
 
@@ -30,7 +35,9 @@
 (global-set-key [(control c) ?v ?l] 'magit-log)
 (global-set-key [(control c) ?v ?a] 'magit-stage)
 (global-set-key [(control c) ?v ?b] 'magit-blame)
-(global-set-key [(control c) ?v ?v] 'magit-commit)
+(global-set-key [(control c) ?v ?c] 'magit-commit)
+(global-set-key [(control c) ?v ?r ?c] 'magit-rebase-continue)
+(global-set-key [(control c) ?v ?r ?s] 'magit-rebase-skip)
 (global-set-key "\C-c6d" 'base64-decode-region)
 (global-set-key "\C-c6e" 'base64-encode-region)
 (global-set-key [(control ?\\)] 'align-regexp)
@@ -108,6 +115,8 @@
 	     (concat (or (getenv "TJS_CVS")
 			 (concat (getenv "HOME") "/cvs-tjs")) "/elisp/"))))
 
+(require 'yaml-mode)
+(add-to-list 'auto-mode-alist '("\\.yaml$" . yaml-mode))
 
 ;; Can custom be trusted not to do this on ttys?  We shall see.
 ;; Untested (but maybe OK on Macs and might work on X11)
