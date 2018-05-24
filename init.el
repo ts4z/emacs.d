@@ -1,14 +1,16 @@
-;;;;
-;;;; ts4z emacs.el -- GNU Emacs flavor
-;;;;
+;;;; emacs.el --- ts4z, GNU Emacs flavor
 
-(let ((package-enable-at-startup nil))
-  ;; apparently no longer required, but here so this works cross-platform while
-  ;; we move slowly into the future.
+;;; Commentary:
+;;;
+;;; flycheck bitches at you if you don't write one of these.
+;;;
+;;; This is my .emacs.
+;;; There are many like it.
+;;; This one is mine.
 
-;; required by package.el
-(package-initialize)
-)  
+;;; Flycheck thinks you need to know when the code starts, so:
+
+;;; Code:
 
 ;;; global/general settings
 
@@ -33,11 +35,12 @@
 (global-set-key [(control c) ?v ?s] 'magit-status)
 (global-set-key [(control c) ?v ?=] 'magit-diff)
 (global-set-key [(control c) ?v ?l] 'magit-log)
-(global-set-key [(control c) ?v ?a] 'magit-stage)
+(global-set-key [(control c) ?v ?a] 'magit-stage-file)
 (global-set-key [(control c) ?v ?b] 'magit-blame)
 (global-set-key [(control c) ?v ?c] 'magit-commit)
+(global-set-key [(control c) ?v ?r ?i] 'magit-rebase-interactive)
 (global-set-key [(control c) ?v ?r ?c] 'magit-rebase-continue)
-(global-set-key [(control c) ?v ?r ?s] 'magit-rebase-skip)
+(global-set-key [(control c) ?v ?r ?S] 'magit-rebase-skip)
 (global-set-key "\C-c6d" 'base64-decode-region)
 (global-set-key "\C-c6e" 'base64-encode-region)
 (global-set-key [(control ?\\)] 'align-regexp)
@@ -72,8 +75,8 @@
 (setq initial-scratch-message nil)
 (setq line-move-visual nil)             ; old skool
 (setq save-interprogram-paste-before-kill t)
-(setq x-select-enable-clipboard t)
-(setq x-select-enable-primary t)
+(setq select-enable-clipboard t)
+(setq select-enable-primary t)
 (setq-default save-place t)
 (show-paren-mode 1)
 (tool-bar-mode 0)
@@ -85,7 +88,7 @@
 ;; GNU thinks it's so important that they made it difficult to disable.
 ;;
 ;; https://github.com/emacs-mirror/emacs/blob/450b0d1c0dabc2a9f4a5e63db87590e9681b9319/lisp/startup.el#L84
-(defun display-startup-echo-area-message ())
+(defun display-startup-echo-area-message () "Don't display anything at startup.")
 
 ;; bump up gc threshold.  as of 2018, it is still 800k.  We can afford a little
 ;; more.
@@ -145,23 +148,27 @@
                       :foreground "darkgreen"))
 
 (defun other-window-previous (n &optional which-frames which-devices)
-  "Select the COUNT'th different (previous) window on this frame.
+  "Select the N th different (previous) window on this frame.
 Behaves exactly like `other-window', but acts in the opposite
-direction."
+direction.  WHICH-FRAMES and WHICH-DEVICES are like `other-window`."
   (interactive "p")
   (other-window (- n)))
 (global-set-key "\C-cp" 'other-window-previous)
 
+;; Rebound to make it easier to type.
 (defun find-tag-next ()
-  "Find the next tag, ala `find-tag'.  C-u M-. is too hard to type."
+  "Find the next tag, ala `find-tag' with a universal argument."
   (interactive)
   (find-tag nil t))
+
 ;; I like this, but ESC ESC is a historic holy key binding and this conflicts.
 ;;(global-set-key [escape (meta ?.)] 'find-tag-next)
 (global-set-key [(control ?.)] 'find-tag-next)
 
 (defun fill-paragraph-unless-word-wrap-enabled (&optional justify region)
-  "Fill, using `fill-paragraph', unless `word-wrap' is enabled."
+  "Fill, using `fill-paragraph', unless `word-wrap' is enabled.
+
+JUSTIFY and REGION as in `fill-paragraph'."
   (interactive)
   (if word-wrap
       (message "Not filling while word-wrapping enabled.  OCD much?")
@@ -169,7 +176,7 @@ direction."
 (global-set-key [(meta ?q)] 'fill-paragraph-unless-word-wrap-enabled)
 
 (defun slice-window-horizontally (w)
-  "Split window into horizontal slices of roughly 80 (or argument)
+  "Split window into horizontal slices of roughly 80 (or W)
 columns.  More useful than `split-window-horizontally' on wide-screen
 displays, where dividing by half is not that useful."
   (interactive "p")
@@ -250,7 +257,7 @@ displays, where dividing by half is not that useful."
   "Attach this function to keys that do things that might confuse.
 For instance, attach it to s-q, in case I forget which key is
 meta and which is super on which keyboard.  Because on the Mac,
-Command-Q might quit, but Meta-Q will fill-paragraph -- and
+Command-Q might quit, but Meta-Q will `fill-paragraph' -- and
 getting the two confused is very frustrating."
   (interactive)
   (beep)
@@ -261,7 +268,7 @@ getting the two confused is very frustrating."
 
 ;; This is a hack, but not quite as huge a hack as when I first wrote it.
 (defun tjs-insert-local-variable-template ()
-  "tjs: insert the thing where local variables go at the bottom of the file."
+  "Insert the thing where local variables go at the bottom of the file."
   (interactive)
   (let (begin
         end
@@ -300,6 +307,9 @@ getting the two confused is very frustrating."
 ;; derived from emacswiki.org/emacs/HippieExpand with my initials added
 ;; and some minor cleanup.
 (defun tjs-tags-complete-tag (string predicate what)
+  "Callback for `all-completions' in `tjs-try-expand-tag'.
+Arguments STRING, PREDICATE, and WHAT are as `all-completions'
+requires."
   (require 'etags)                      ; tags-completion-table
   (if tags-completion-table
       (save-excursion
@@ -312,6 +322,9 @@ getting the two confused is very frustrating."
           (try-completion string (tags-completion-table) predicate)))))
 
 (defun tjs-try-expand-tag (old)
+  "Hook for `hippie-expand' that, IIRC, expands tags in the tags table.
+
+OLD is an argument to this function."
   (unless old
     (he-init-string (save-excursion (backward-word 1) (point)) (point))
     (setq he-expand-list
@@ -331,7 +344,7 @@ getting the two confused is very frustrating."
 (add-hook 'hippie-expand-try-functions-list 'tjs-try-expand-tag nil)
 
 ;; I don't like the default order of hippie-expand.  This reorders whatever
-;; is there to put the filename expansions at the end. 
+;; is there to put the filename expansions at the end.
 (require 'cl)                           ; gensym, copy-list
 (setq hippie-expand-try-functions-list
       (let ((ordering (append
@@ -347,6 +360,13 @@ getting the two confused is very frustrating."
         (sort (copy-list hippie-expand-try-functions-list)
               (lambda (a b) (string< (cdr (assoc a ordering))
                                      (cdr (assoc b ordering)))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; flycheck
+
+(global-flycheck-mode t)
+(flycheck-gometalinter-setup)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -411,7 +431,7 @@ getting the two confused is very frustrating."
 
 ;; Java
 
-(add-hook 'java-mode-hook (lambda () 
+(add-hook 'java-mode-hook (lambda ()
 	    (c-set-style "k&r")
 	    ;; this could be global, right?
 	    (c-set-offset 'inline-open 0)
@@ -433,10 +453,6 @@ getting the two confused is very frustrating."
 ;; Perl
 
 (defalias 'perl-mode 'cperl-mode)	; cripple old perl-mode
-(defun my-cperl-mode-hook ()
-  (filladapt-mode 0)	; it sucks at perl
-  (cperl-set-style "K&R")
-  (set-variable 'cperl-indent-level 4))
 
 (add-hook 'cperl-mode-hook (lambda ()
 			     (cperl-set-style "K&R")
@@ -446,7 +462,7 @@ getting the two confused is very frustrating."
 ;;(c-toggle-hungry-state 1)
 
 (defun first-file-that-exists (&rest args)
-  "tjs: Return the first argument that `file-exists-p', or nil."
+  "Return the first of ARGS that `file-exists-p', or nil."
   ;; (message (format "called with: %s" args))
   (let ((f (car args))
 	(rest (cdr args)))
@@ -502,7 +518,7 @@ getting the two confused is very frustrating."
 ;; http://www.blogbyben.com/2010/08/handy-emacs-function-url-decode-region.html
 
 (defun url-decode-region (start end)
-  "Replace a region with the same contents, only URL decoded.
+  "Replace a region from START to END with the same contents, only URL decoded.
 
 lifted from
 http://www.blogbyben.com/2010/08/handy-emacs-function-url-decode-region.html"
@@ -512,7 +528,7 @@ http://www.blogbyben.com/2010/08/handy-emacs-function-url-decode-region.html"
     (insert text)))
 
 (defun url-encode-region (start end)
-  "Replace a region with the same contents, only URL encoded."
+  "Replace a region (from START to END) with the same contents, only URL encoded."
   ;; yes, it's just the code above with a different encoder.
   (interactive "r")
   (let ((text (url-hexify-string (buffer-substring start end))))
@@ -524,13 +540,17 @@ http://www.blogbyben.com/2010/08/handy-emacs-function-url-decode-region.html"
 ;; fill column -- I prefer 79 in general, sort of.
 
 (defun maybe-set-fill-column-to-72 ()
-  "Set the fill column to 72 some of the time, according to the whims of
-this method.  Mostly this is so git commits look nice when wrapped."
+  "Set the fill column to 72 some of the time.
+
+This does so according to the whims of this method.  Mostly this
+is so git commits look nice when wrapped."
   (when (member (buffer-name) '("COMMIT_EDITMSG" "*vc-log*"))
     (setq fill-column 72)))
 
 (setq-default fill-column 79)
 (add-hook 'text-mode-hook #'maybe-set-fill-column-to-72)
+
+(add-to-list 'auto-mode-alist '("_EDITMSG$" . text-mode))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -585,7 +605,7 @@ this method.  Mostly this is so git commits look nice when wrapped."
  '(ns-alternate-modifier 'super)
  '(ns-command-modifier 'meta)
  '(package-selected-packages
-   '(hound terraform-mode minimap minimal-session-saver ac-emoji go-rename go-playground go-guru go-errcheck go-eldoc go-autocomplete which-key markdown-mode magit go-mode json-mode rainbow-mode))
+   '(dockerfile-mode flycheck-gometalinter ac-emoji go-autocomplete hound terraform-mode minimap minimal-session-saver go-rename go-playground go-guru go-errcheck go-eldoc which-key markdown-mode magit go-mode json-mode rainbow-mode))
  '(show-paren-mode t)
  '(show-paren-style 'expression)
  '(uniquify-buffer-name-style 'forward nil (uniquify))
@@ -597,3 +617,7 @@ this method.  Mostly this is so git commits look nice when wrapped."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+
+;;; flycheck is the only thing surprised by this
+(provide 'init)
+;;; init.el ends here
