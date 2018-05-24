@@ -126,6 +126,9 @@
 	     "~/share/emacs/slime"
              ;; use my yaml mode from this path; it has a bug fix (4/2018)
              "~/git/yaml-mode"
+             "~/share/emacs/yaml-mode"
+             "~/share/emacs/groovy"
+	     "~/share/emacs/slime"
 	     (concat (or (getenv "TJS_CVS")
 			 (concat (getenv "HOME") "/cvs-tjs")) "/elisp/"))))
 
@@ -134,6 +137,7 @@
 
 ;; Can custom be trusted not to do this on ttys?  We shall see.
 ;; Untested (but maybe OK on Macs and might work on X11)
+
 (condition-case nil
     (if running-on-mac-p
         (set-face-font 'fixed-pitch (font-spec :family "Courier"))
