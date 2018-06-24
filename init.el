@@ -57,7 +57,7 @@
 (global-set-key [(control c) ?w]        'toggle-word-wrap)
 (global-set-key [(control z)] 'undo) ;the universe has decided C-z is undo
 (global-set-key [(meta control backspace)] 'backward-kill-sexp)
-(global-set-key [(meta z)] 'zap-up-to-char)
+(global-set-key [(control c) ?z] 'zap-up-to-char)
 (global-set-key (kbd "M-*") 'pop-tag-mark)
 (global-set-key (kbd "M-_") 'text-scale-decrease)
 (global-set-key (kbd "M-+") 'text-scale-increase)
