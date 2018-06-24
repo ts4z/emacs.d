@@ -1,5 +1,10 @@
-auto-save-list
 %*
+ac-comphist.dat
+auto-save-list
+backups
+elpa
 history
+places
 session.*
+sokoban-state
 tramp
