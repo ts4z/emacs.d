@@ -14,8 +14,9 @@
 
 ;;; global/general settings
 
-(add-to-list 'package-archives
-             '("melpa-stable" . "http://melpa-stable.milkbox.net/packages/") t)
+(if (boundp 'package-archives)
+    (add-to-list 'package-archives
+		 '("melpa-stable" . "http://melpa-stable.milkbox.net/packages/") t))
 
 (require 'saveplace)
 (require 'winner)
@@ -56,12 +57,12 @@
 (global-set-key [(control c) ?w]        'toggle-word-wrap)
 (global-set-key [(control z)] 'undo) ;the universe has decided C-z is undo
 (global-set-key [(meta control backspace)] 'backward-kill-sexp)
+(global-set-key [(meta z)] 'zap-up-to-char)
 (global-set-key (kbd "M-*") 'pop-tag-mark)
 (global-set-key (kbd "M-_") 'text-scale-decrease)
 (global-set-key (kbd "M-+") 'text-scale-increase)
 (global-subword-mode t)
-(add-hook 'tty-setup-hook (lambda () (menu-bar-mode -1)))
-(mouse-wheel-mode 1)
+;;(mouse-wheel-mode 1)
 (put 'downcase-region 'disabled nil)
 (put 'eval-expression 'disabled nil)    ; Does this still need to be enabled?
 (put 'narrow-to-region 'disabled nil)
@@ -72,6 +73,7 @@
 (set-variable 'inhibit-startup-message t)
 (set-variable 'version-control t)
 (setq garbage-collection-messages t)    ; old skool
+(setq backup-directory-alist `(("." . ,(concat user-emacs-directory "backups"))))
 (setq initial-scratch-message nil)
 (setq line-move-visual nil)             ; old skool
 (setq save-interprogram-paste-before-kill t)
@@ -89,6 +91,12 @@
 ;;
 ;; https://github.com/emacs-mirror/emacs/blob/450b0d1c0dabc2a9f4a5e63db87590e9681b9319/lisp/startup.el#L84
 (defun display-startup-echo-area-message () "Don't display anything at startup.")
+
+;; Menu bar or no menu bar?  On Mac, definitely menu bar.
+(unless (cl-search "darwin" (emacs-version))
+  (menu-bar-mode 0))                       ; I never do this, but try C-mouse 3
+;; On tty, definitely disable menu bar (I don't even know how to use it there).
+(add-hook 'tty-setup-hook (lambda () (menu-bar-mode -1)))
 
 ;; bump up gc threshold.  as of 2018, it is still 800k.  We can afford a little
 ;; more.
@@ -302,7 +310,8 @@ getting the two confused is very frustrating."
 ;; hippie-expand
 ;;
 
-(global-set-key [(meta ??)] 'hippie-expand)
+;;(global-set-key [(meta ??)] 'hippie-expand)
+(global-set-key [(meta ?/)] 'hippie-expand)
 
 ;; derived from emacswiki.org/emacs/HippieExpand with my initials added
 ;; and some minor cleanup.
@@ -605,7 +614,7 @@ is so git commits look nice when wrapped."
  '(ns-alternate-modifier 'super)
  '(ns-command-modifier 'meta)
  '(package-selected-packages
-   '(dockerfile-mode flycheck-gometalinter ac-emoji go-autocomplete hound terraform-mode minimap minimal-session-saver go-rename go-playground go-guru go-errcheck go-eldoc which-key markdown-mode magit go-mode json-mode rainbow-mode))
+   '(ac-emoji dockerfile-mode flycheck flycheck-gometalinter go-autocomplete go-eldoc go-errcheck go-guru go-mode go-playground go-rename hound json-mode magit markdown-mode minimal-session-saver minimap rainbow-mode rust-mode rust-playground sokoban terraform-mode which-key))
  '(show-paren-mode t)
  '(show-paren-style 'expression)
  '(uniquify-buffer-name-style 'forward nil (uniquify))
