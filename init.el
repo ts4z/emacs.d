@@ -77,6 +77,7 @@
 (setq initial-scratch-message nil)
 (setq line-move-visual nil)             ; old skool
 (setq save-interprogram-paste-before-kill t)
+(setq gnutls-min-prime-bits 2048)
 (setq select-enable-clipboard t)
 (setq select-enable-primary t)
 (setq-default save-place t)
@@ -90,7 +91,8 @@
 ;; GNU thinks it's so important that they made it difficult to disable.
 ;;
 ;; https://github.com/emacs-mirror/emacs/blob/450b0d1c0dabc2a9f4a5e63db87590e9681b9319/lisp/startup.el#L84
-(defun display-startup-echo-area-message () "Don't display anything at startup.")
+(defun display-startup-echo-area-message ()
+  "Don't display anything at startup.")
 
 ;; Menu bar or no menu bar?  On Mac, definitely menu bar.
 (unless (cl-search "darwin" (emacs-version))
@@ -310,7 +312,6 @@ getting the two confused is very frustrating."
 ;; hippie-expand
 ;;
 
-;;(global-set-key [(meta ??)] 'hippie-expand)
 (global-set-key [(meta ?/)] 'hippie-expand)
 
 ;; derived from emacswiki.org/emacs/HippieExpand with my initials added
@@ -467,6 +468,11 @@ OLD is an argument to this function."
 			     (cperl-set-style "K&R")
 			     (set-variable 'cperl-indent-level 4)))
 
+;; protobuf-mode
+
+(add-hook 'protobuf-mode-hook (lambda ()
+                                (set-variable 'c-basic-offset 2)))
+
 ;; this is fine, but C-c BS does the job, too.
 ;;(c-toggle-hungry-state 1)
 
@@ -608,13 +614,18 @@ is so git commits look nice when wrapped."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(cperl-invalid-face 'default)
+ '(display-line-numbers t)
+ '(display-line-numbers-widen t)
+ '(global-display-line-numbers-mode t)
+ '(gnutls-verify-error t)
  '(indent-tabs-mode nil)
  '(mail-host-address "psaux.com")
  '(mail-user-agent 'gnus-user-agent)
+ '(network-security-level 'high)
  '(ns-alternate-modifier 'super)
  '(ns-command-modifier 'meta)
  '(package-selected-packages
-   '(ac-emoji dockerfile-mode flycheck flycheck-gometalinter go-autocomplete go-eldoc go-errcheck go-guru go-mode go-playground go-rename hound json-mode magit markdown-mode minimal-session-saver minimap rainbow-mode rust-mode rust-playground sokoban terraform-mode which-key))
+   '(ac-emoji dockerfile-mode flycheck flycheck-gometalinter go-autocomplete go-eldoc go-errcheck go-guru go-mode go-playground go-rename hound json-mode magit markdown-mode minimal-session-saver minimap protobuf-mode rainbow-mode rust-mode rust-playground sokoban terraform-mode which-key)
  '(show-paren-mode t)
  '(show-paren-style 'expression)
  '(uniquify-buffer-name-style 'forward nil (uniquify))
@@ -625,7 +636,8 @@ is so git commits look nice when wrapped."
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+ '(line-number ((t (:inherit (shadow default) :background "gray90" :slant oblique :weight normal :height 0.7 :family "Courier"))))
+ '(line-number-current-line ((t (:inherit line-number :foreground "green4" :weight bold)))))
 
 ;;; flycheck is the only thing surprised by this
 (provide 'init)
