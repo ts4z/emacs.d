@@ -3,6 +3,7 @@ ac-comphist.dat
 auto-save-list
 backups
 elpa
+eshell
 history
 places
 session.*
