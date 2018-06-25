@@ -567,6 +567,36 @@ is so git commits look nice when wrapped."
 
 (add-to-list 'auto-mode-alist '("_EDITMSG$" . text-mode))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun uniq (y &optional compare)
+  "Suppress identical items in a list Y.
+
+If COMPARE is supplied, use that for comparisons.  If not, use `eq'.
+Similar in spirit to Unix uniq(1)."
+  
+  (if (null compare)
+      (setq compare #'eq))
+
+  ;; bug: recursive; consumes stack.
+  (cond ((null y)
+         nil)
+        ((null (cdr y))
+         y)
+        ((eq (car y) (cadr y))
+         (uniq (cdr y)))
+        (t
+         (cons (car y) (uniq (cdr y)))))))
+
+(defun symbol< (this that)
+  "Is a symbol with name THIS less than THAT?
+
+Suitable as a `sort' predicate."
+  (check-type this symbol)
+  (check-type that symbol)
+  (string< (symbol-name this) (symbol-name that)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; Conclusion
