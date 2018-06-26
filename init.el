@@ -54,6 +54,7 @@
 (global-set-key [(control c) ?i]        'imenu)
 (global-set-key [(control c) ?l]        'tjs-insert-local-variable-template)
 (global-set-key [(control c) ?n]        'linum-mode)
+(global-set-key [(control c) ?s]        'sort-lines)
 (global-set-key [(control c) ?w]        'toggle-word-wrap)
 (global-set-key [(control z)] 'undo) ;the universe has decided C-z is undo
 (global-set-key [(meta control backspace)] 'backward-kill-sexp)
