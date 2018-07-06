@@ -588,7 +588,7 @@ Similar in spirit to Unix uniq(1)."
         ((eq (car y) (cadr y))
          (uniq (cdr y)))
         (t
-         (cons (car y) (uniq (cdr y)))))))
+         (cons (car y) (uniq (cdr y))))))
 
 (defun symbol< (this that)
   "Is a symbol with name THIS less than THAT?
@@ -656,7 +656,7 @@ Suitable as a `sort' predicate."
  '(ns-alternate-modifier 'super)
  '(ns-command-modifier 'meta)
  '(package-selected-packages
-   '(ac-emoji dockerfile-mode flycheck flycheck-gometalinter go-autocomplete go-eldoc go-errcheck go-guru go-mode go-playground go-rename hound json-mode magit markdown-mode minimal-session-saver minimap protobuf-mode rainbow-mode rust-mode rust-playground sokoban terraform-mode which-key)
+   '(ac-emoji dockerfile-mode flycheck flycheck-gometalinter go-autocomplete go-eldoc go-errcheck go-guru go-mode go-playground go-rename hound json-mode magit markdown-mode minimal-session-saver minimap protobuf-mode rainbow-mode rust-mode rust-playground sokoban terraform-mode which-key))
  '(show-paren-mode t)
  '(show-paren-style 'expression)
  '(uniquify-buffer-name-style 'forward nil (uniquify))
