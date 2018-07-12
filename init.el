@@ -74,7 +74,7 @@
 (set-variable 'inhibit-startup-message t)
 (set-variable 'version-control t)
 (setq garbage-collection-messages t)    ; old skool
-(setq backup-directory-alist `(("." . ,(concat user-emacs-directory "backups"))))
+;; (setq backup-directory-alist `(("." . ,(concat user-emacs-directory "backups"))))
 (setq initial-scratch-message nil)
 (setq line-move-visual nil)             ; old skool
 (setq save-interprogram-paste-before-kill t)
@@ -647,6 +647,10 @@ Suitable as a `sort' predicate."
  '(cperl-invalid-face 'default)
  '(display-line-numbers t)
  '(display-line-numbers-widen t)
+ '(flycheck-gometalinter-deadline "2s")
+ '(flycheck-gometalinter-disable-linters '("gotypex"))
+ '(flycheck-gometalinter-fast t)
+ '(flycheck-gometalinter-vendor t)
  '(global-display-line-numbers-mode t)
  '(gnutls-verify-error t)
  '(indent-tabs-mode nil)
@@ -656,7 +660,7 @@ Suitable as a `sort' predicate."
  '(ns-alternate-modifier 'super)
  '(ns-command-modifier 'meta)
  '(package-selected-packages
-   '(ac-emoji dockerfile-mode flycheck flycheck-gometalinter go-autocomplete go-eldoc go-errcheck go-guru go-mode go-playground go-rename hound json-mode magit markdown-mode minimal-session-saver minimap protobuf-mode rainbow-mode rust-mode rust-playground sokoban terraform-mode which-key))
+   '(protobuf-mode sokoban dockerfile-mode flycheck-gometalinter ac-emoji go-autocomplete hound terraform-mode minimap minimal-session-saver go-rename go-playground go-guru go-errcheck go-eldoc which-key markdown-mode magit go-mode json-mode rainbow-mode))
  '(show-paren-mode t)
  '(show-paren-style 'expression)
  '(uniquify-buffer-name-style 'forward nil (uniquify))
