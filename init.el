@@ -590,6 +590,21 @@ Similar in spirit to Unix uniq(1)."
         (t
          (cons (car y) (uniq (cdr y))))))
 
+(defun nuniq (y &optional compare)
+  "Suppress identical items in a list Y.
+
+If COMPARE is supplied, use that for comparisons.  If not, uses `eq'.
+Similar in spirit to Unix uniq(1).  Destructive on Y."
+  
+  (if (null compare)
+      (setq compare #'eq))
+
+  (prog1 y
+    (while (cadr y)                     ; at least 2 elements
+      (if (funcall compare (car y) (cadr y))
+          (setcdr y (cddr y))
+        (setq y (cdr y))))))
+
 (defun symbol< (this that)
   "Is a symbol with name THIS less than THAT?
 
