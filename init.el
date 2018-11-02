@@ -65,7 +65,6 @@
 (global-subword-mode t)
 ;;(mouse-wheel-mode 1)
 (put 'downcase-region 'disabled nil)
-(put 'eval-expression 'disabled nil)    ; Does this still need to be enabled?
 (put 'narrow-to-region 'disabled nil)
 (put 'upcase-region 'disabled nil)
 (savehist-mode)
