@@ -134,11 +134,11 @@
 
 ;; Can custom be trusted not to do this on ttys?  We shall see.
 ;; Untested (but maybe OK on Macs and might work on X11)
-(condition-case nil
-    (if running-on-mac-p
-        (set-face-font 'fixed-pitch (font-spec :family "Courier"))
-      (set-face-font 'default "DejaVu Sans Mono 10"))
-  (error nil))
+;; (condition-case nil
+;;     (if running-on-mac-p
+;;         (set-face-font 'fixed-pitch (font-spec :family "Courier"))
+;;       (set-face-font 'default "DejaVu Sans Mono 10"))
+;;   (error nil))
 
 ;; on terminals, these colors are OK but Emacs does stupid things with
 ;; backgrounds.  try not to define them -- the defaults are nice
@@ -671,8 +671,12 @@ Suitable as a `sort' predicate."
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(default ((t (:inherit nil :stipple nil :background "White" :foreground "Black" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 110 :width normal :foundry "nil" :family "Monaco"))))
  '(line-number ((t (:inherit (shadow default) :background "gray90" :slant oblique :weight normal :height 0.7 :family "Courier"))))
- '(line-number-current-line ((t (:inherit line-number :foreground "green4" :weight bold)))))
+ '(line-number-current-line ((t (:inherit line-number :foreground "green4" :weight bold))))
+ '(mode-line ((t (:background "grey75" :foreground "black" :box (:line-width 2 :color "grey75" :style released-button) :height 1.1 :family "Lucida Grande"))))
+ '(mode-line-buffer-id ((t (:slant italic :weight bold))))
+ '(mode-line-inactive ((t (:inherit mode-line :background "grey90" :foreground "grey20" :box (:line-width 2 :color "white") :weight light)))))
 
 ;;; flycheck is the only thing surprised by this
 (provide 'init)
