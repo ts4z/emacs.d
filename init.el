@@ -570,25 +570,6 @@ is so git commits look nice when wrapped."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun uniq (y &optional compare)
-  "Suppress identical items in a list Y.
-
-If COMPARE is supplied, use that for comparisons.  If not, use `eq'.
-Similar in spirit to Unix uniq(1)."
-  
-  (if (null compare)
-      (setq compare #'eq))
-
-  ;; bug: recursive; consumes stack.
-  (cond ((null y)
-         nil)
-        ((null (cdr y))
-         y)
-        ((eq (car y) (cadr y))
-         (uniq (cdr y)))
-        (t
-         (cons (car y) (uniq (cdr y))))))
-
 (defun nuniq (y &optional compare)
   "Suppress identical items in a list Y.
 
