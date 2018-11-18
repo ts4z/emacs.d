@@ -136,6 +136,9 @@
 (require 'yaml-mode)
 (add-to-list 'auto-mode-alist '("\\.yaml$" . yaml-mode))
 
+(add-hook 'tty-setup-hook (lambda () (menu-bar-mode -1)))
+(if (not running-on-mac-p) (menu-bar-mode -1))
+
 ;; Can custom be trusted not to do this on ttys?  We shall see.
 ;; Untested (but maybe OK on Macs and might work on X11)
 
