@@ -679,7 +679,7 @@ Suitable as a `sort' predicate."
  '(ns-alternate-modifier 'super)
  '(ns-command-modifier 'meta)
  '(package-selected-packages
-   '(go-add-tags go-direx go-impl godoctor protobuf-mode sokoban dockerfile-mode flycheck-gometalinter ac-emoji go-autocomplete hound terraform-mode minimap minimal-session-saver go-rename go-playground go-guru go-errcheck go-eldoc which-key markdown-mode magit go-mode json-mode rainbow-mode))
+   '(ac-emoji bool-flip dockerfile-mode flycheck-gometalinter go-add-tags go-autocomplete go-direx go-eldoc go-errcheck go-guru go-impl go-mode go-playground go-rename godoctor hound json-mode magit markdown-mode minimal-session-saver minimap protobuf-mode rainbow-mode slime sokoban terraform-mode which-key))
  '(show-paren-mode t)
  '(show-paren-style 'expression)
  '(uniquify-buffer-name-style 'forward nil (uniquify))
@@ -690,6 +690,7 @@ Suitable as a `sort' predicate."
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(default ((t (:family "Hack" :foundry "SRC" :slant normal :weight normal :height 100 :width normal))))
  '(line-number ((t (:inherit (shadow default) :background "gray90" :slant oblique :weight normal :height 0.7 :family "Courier"))))
  '(line-number-current-line ((t (:inherit line-number :foreground "green4" :weight bold)))))
 
