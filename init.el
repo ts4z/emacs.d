@@ -45,6 +45,7 @@
 (global-set-key "\C-c6d" 'base64-decode-region)
 (global-set-key "\C-c6e" 'base64-encode-region)
 (global-set-key [(control ?\\)] 'align-regexp)
+(global-set-key [(control c) ?1] #'bool-flip-do-flip)
 (global-set-key [(control c) ?3]        'slice-window-horizontally)
 (global-set-key [(control c) ?\;]       'comment-region)
 (global-set-key [(control c) ?b]        'bury-buffer)
@@ -648,13 +649,24 @@ Suitable as a `sort' predicate."
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(bool-flip-alist
+   '(("T" . "F")
+     ("t" . "nil")
+     ("TRUE" . "FALSE")
+     ("True" . "False")
+     ("true" . "false")
+     ("Y" . "N")
+     ("y" . "n")
+     ("YES" . "NO")
+     ("Yes" . "No")
+     ("yes" . "no")
+     ("1" . "0")))
  '(cperl-invalid-face 'default)
  '(display-line-numbers-widen t)
  '(flycheck-gometalinter-deadline "2s")
  '(flycheck-gometalinter-disable-linters '("gotypex"))
  '(flycheck-gometalinter-fast t)
  '(flycheck-gometalinter-vendor t)
- '(global-display-line-numbers-mode t)
  '(gnutls-verify-error t)
  '(indent-tabs-mode nil)
  '(mail-host-address "psaux.com")
