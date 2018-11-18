@@ -466,8 +466,9 @@ OLD is an argument to this function."
 
 ;; Lisp
 
+(setq inferior-lisp-program "/usr/bin/sbcl")
 ; (setq inferior-lisp-program "/usr/local/bin/sbcl")
-(setq inferior-lisp-program "/home/tjs/local/bin/sbcl")
+; (setq inferior-lisp-program "/home/tjs/local/bin/sbcl")
 
 ;; Perl
 
