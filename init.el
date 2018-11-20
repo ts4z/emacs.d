@@ -111,7 +111,7 @@
 
 ;; bump up gc threshold.  as of 2018, it is still 800k.  We can afford a little
 ;; more.
-(let ((big-number 4000000))
+(let ((big-number 40000000))
   (if (< gc-cons-threshold big-number)
       (setq gc-cons-threshold big-number)
     (run-with-idle-timer
