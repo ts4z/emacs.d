@@ -131,12 +131,10 @@
 	      (setq load-path (cons dir load-path)))))
       (nreverse
        (list "/usr/local/share/emacs/site-lisp/"
-	     "~/share/emacs/slime"
              ;; use my yaml mode from this path; it has a bug fix (4/2018)
              "~/git/yaml-mode"
              "~/share/emacs/yaml-mode"
              "~/share/emacs/groovy"
-	     "~/share/emacs/slime"
 	     (concat (or (getenv "TJS_CVS")
 			 (concat (getenv "HOME") "/cvs-tjs")) "/elisp/"))))
 
