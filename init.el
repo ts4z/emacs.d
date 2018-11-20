@@ -684,7 +684,7 @@ Suitable as a `sort' predicate."
  '(ns-alternate-modifier 'super)
  '(ns-command-modifier 'meta)
  '(package-selected-packages
-   '(ac-emoji bool-flip dockerfile-mode flycheck-gometalinter go-add-tags go-autocomplete go-direx go-eldoc go-errcheck go-guru go-impl go-mode go-playground go-rename godoctor hound json-mode magit markdown-mode minimal-session-saver minimap protobuf-mode rainbow-mode slime sokoban terraform-mode which-key))
+   '(ac-emoji bool-flip dockerfile-mode flycheck-gometalinter go-add-tags go-autocomplete go-direx go-eldoc go-errcheck go-guru go-impl go-mode go-playground go-rename godoctor hound json-mode magit markdown-mode minimal-session-saver minimap protobuf-mode rainbow-mode sly sokoban terraform-mode which-key))
  '(show-paren-mode t)
  '(show-paren-style 'expression)
  '(uniquify-buffer-name-style 'forward nil (uniquify))
