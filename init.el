@@ -645,7 +645,6 @@ Suitable as a `sort' predicate."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(cperl-invalid-face 'default)
- '(display-line-numbers t)
  '(display-line-numbers-widen t)
  '(flycheck-gometalinter-deadline "2s")
  '(flycheck-gometalinter-disable-linters '("gotypex"))
@@ -660,7 +659,7 @@ Suitable as a `sort' predicate."
  '(ns-alternate-modifier 'super)
  '(ns-command-modifier 'meta)
  '(package-selected-packages
-   '(protobuf-mode sokoban dockerfile-mode flycheck-gometalinter ac-emoji go-autocomplete hound terraform-mode minimap minimal-session-saver go-rename go-playground go-guru go-errcheck go-eldoc which-key markdown-mode magit go-mode json-mode rainbow-mode))
+   '(go-add-tags go-direx go-impl godoctor protobuf-mode sokoban dockerfile-mode flycheck-gometalinter ac-emoji go-autocomplete hound terraform-mode minimap minimal-session-saver go-rename go-playground go-guru go-errcheck go-eldoc which-key markdown-mode magit go-mode json-mode rainbow-mode))
  '(show-paren-mode t)
  '(show-paren-style 'expression)
  '(uniquify-buffer-name-style 'forward nil (uniquify))
