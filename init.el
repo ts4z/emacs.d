@@ -14,9 +14,16 @@
 
 ;;; global/general settings
 
-(if (boundp 'package-archives)
-    (add-to-list 'package-archives
-		 '("melpa-stable" . "http://melpa-stable.milkbox.net/packages/") t))
+(require 'package)
+(let* ((no-ssl (and (memq system-type '(windows-nt ms-dos))
+                    (not (gnutls-available-p))))
+       (proto (if no-ssl "http" "https")))
+  ;; Comment/uncomment these two lines to enable/disable MELPA and MELPA Stable as desired
+  (add-to-list 'package-archives (cons "melpa" (concat proto "://melpa.org/packages/")) t)
+  ;;(add-to-list 'package-archives (cons "melpa-stable" (concat proto "://stable.melpa.org/packages/")) t)
+  (when (< emacs-major-version 24)
+    ;; For important compatibility libraries like cl-lib
+    (add-to-list 'package-archives (cons "gnu" (concat proto "://elpa.gnu.org/packages/")))))
 
 (require 'saveplace)
 (require 'winner)
@@ -45,6 +52,7 @@
 (global-set-key "\C-c6d" 'base64-decode-region)
 (global-set-key "\C-c6e" 'base64-encode-region)
 (global-set-key [(control ?\\)] 'align-regexp)
+(global-set-key [(control c) ?1] #'bool-flip-do-flip)
 (global-set-key [(control c) ?3]        'slice-window-horizontally)
 (global-set-key [(control c) ?\;]       'comment-region)
 (global-set-key [(control c) ?b]        'bury-buffer)
@@ -102,7 +110,7 @@
 
 ;; bump up gc threshold.  as of 2018, it is still 800k.  We can afford a little
 ;; more.
-(let ((big-number 4000000))
+(let ((big-number 40000000))
   (if (< gc-cons-threshold big-number)
       (setq gc-cons-threshold big-number)
     (run-with-idle-timer
@@ -122,22 +130,18 @@
 	      (setq load-path (cons dir load-path)))))
       (nreverse
        (list "/usr/local/share/emacs/site-lisp/"
-	     "~/share/emacs/slime"
              ;; use my yaml mode from this path; it has a bug fix (4/2018)
              "~/git/yaml-mode"
+             "~/share/emacs/yaml-mode"
+             "~/share/emacs/groovy"
 	     (concat (or (getenv "TJS_CVS")
 			 (concat (getenv "HOME") "/cvs-tjs")) "/elisp/"))))
 
 (require 'yaml-mode)
 (add-to-list 'auto-mode-alist '("\\.yaml$" . yaml-mode))
 
-;; Can custom be trusted not to do this on ttys?  We shall see.
-;; Untested (but maybe OK on Macs and might work on X11)
-;; (condition-case nil
-;;     (if running-on-mac-p
-;;         (set-face-font 'fixed-pitch (font-spec :family "Courier"))
-;;       (set-face-font 'default "DejaVu Sans Mono 10"))
-;;   (error nil))
+(add-hook 'tty-setup-hook (lambda () (menu-bar-mode -1)))
+(if (not running-on-mac-p) (menu-bar-mode -1))
 
 ;; on terminals, these colors are OK but Emacs does stupid things with
 ;; backgrounds.  try not to define them -- the defaults are nice
@@ -457,8 +461,9 @@ OLD is an argument to this function."
 
 ;; Lisp
 
+(setq inferior-lisp-program "/usr/bin/sbcl")
 ; (setq inferior-lisp-program "/usr/local/bin/sbcl")
-(setq inferior-lisp-program "/home/tjs/local/bin/sbcl")
+; (setq inferior-lisp-program "/home/tjs/local/bin/sbcl")
 
 ;; Perl
 
@@ -639,14 +644,24 @@ Suitable as a `sort' predicate."
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(bool-flip-alist
+   '(("T" . "F")
+     ("t" . "nil")
+     ("TRUE" . "FALSE")
+     ("True" . "False")
+     ("true" . "false")
+     ("Y" . "N")
+     ("y" . "n")
+     ("YES" . "NO")
+     ("Yes" . "No")
+     ("yes" . "no")
+     ("1" . "0")))
  '(cperl-invalid-face 'default)
- '(display-line-numbers t)
  '(display-line-numbers-widen t)
  '(flycheck-gometalinter-deadline "2s")
  '(flycheck-gometalinter-disable-linters '("gotypex"))
  '(flycheck-gometalinter-fast t)
  '(flycheck-gometalinter-vendor t)
- '(global-display-line-numbers-mode t)
  '(gnutls-verify-error t)
  '(indent-tabs-mode nil)
  '(mail-host-address "psaux.com")
@@ -655,7 +670,7 @@ Suitable as a `sort' predicate."
  '(ns-alternate-modifier 'super)
  '(ns-command-modifier 'meta)
  '(package-selected-packages
-   '(protobuf-mode sokoban dockerfile-mode flycheck-gometalinter ac-emoji go-autocomplete hound terraform-mode minimap minimal-session-saver go-rename go-playground go-guru go-errcheck go-eldoc which-key markdown-mode magit go-mode json-mode rainbow-mode))
+   '(ac-emoji bool-flip dockerfile-mode flycheck-gometalinter go-add-tags go-autocomplete go-direx go-eldoc go-errcheck go-guru go-impl go-mode go-playground go-rename godoctor hound json-mode magit markdown-mode minimal-session-saver minimap protobuf-mode rainbow-mode sly sokoban terraform-mode which-key))
  '(show-paren-mode t)
  '(show-paren-style 'expression)
  '(uniquify-buffer-name-style 'forward nil (uniquify))
@@ -666,12 +681,17 @@ Suitable as a `sort' predicate."
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(default ((t (:inherit nil :stipple nil :background "White" :foreground "Black" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 110 :width normal :foundry "nil" :family "Monaco"))))
  '(line-number ((t (:inherit (shadow default) :background "gray90" :slant oblique :weight normal :height 0.7 :family "Courier"))))
  '(line-number-current-line ((t (:inherit line-number :foreground "green4" :weight bold))))
  '(mode-line ((t (:background "grey75" :foreground "black" :box (:line-width 2 :color "grey75" :style released-button) :height 1.1 :family "Lucida Grande"))))
  '(mode-line-buffer-id ((t (:slant italic :weight bold))))
  '(mode-line-inactive ((t (:inherit mode-line :background "grey90" :foreground "grey20" :box (:line-width 2 :color "white") :weight light)))))
+
+;; TBD: debug
+(condition-case nil
+    (if running-on-mac-p
+        (set-face-font 'default (font-spec :height 110 :family "Monaco")))
+  (error nil))
 
 ;;; flycheck is the only thing surprised by this
 (provide 'init)
