@@ -597,8 +597,8 @@ Similar in spirit to Unix uniq(1).  Destructive on Y."
   "Is a symbol with name THIS less than THAT?
 
 Suitable as a `sort' predicate."
-  (check-type this symbol)
-  (check-type that symbol)
+  (cl-check-type this symbol)
+  (cl-check-type that symbol)
   (string< (symbol-name this) (symbol-name that)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
