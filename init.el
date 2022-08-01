@@ -495,7 +495,8 @@ OLD is an argument to this function."
 ;; need 'go' on path?  can't depend on zshrc to do this; we might be
 ;; running from display manager or Mac or something else that can't
 ;; set $PATH properly.
-(let ((gobin (first-file-that-exists "/usr/lib/golang-1.10/bin"
+(let ((gobin (first-file-that-exists "/opt/go/bin"
+                                     "/usr/lib/golang-1.10/bin"
                                      "/usr/lib/golang-1.9/bin")))
   (when gobin
     (add-to-list 'exec-path gobin)))
@@ -524,8 +525,10 @@ OLD is an argument to this function."
 (require 'go-guru)
 (add-hook 'go-mode-hook #'go-guru-hl-identifier-mode)
 
+(require 'eglot)
+
 ;; autocomplete
-(require 'go-autocomplete)
+;; (require 'go-autocomplete)
 (require 'auto-complete-config)
 (ac-config-default)
 
@@ -670,7 +673,7 @@ Suitable as a `sort' predicate."
  '(ns-alternate-modifier 'super)
  '(ns-command-modifier 'meta)
  '(package-selected-packages
-   '(ac-emoji bool-flip dockerfile-mode flycheck-gometalinter go-add-tags go-autocomplete go-direx go-eldoc go-errcheck go-guru go-impl go-mode go-playground go-rename godoctor hound json-mode magit markdown-mode minimal-session-saver minimap protobuf-mode rainbow-mode sly sokoban terraform-mode which-key))
+   '(eldoc eglot ac-emoji bool-flip dockerfile-mode flycheck-gometalinter go-add-tags go-autocomplete go-direx go-eldoc go-errcheck go-guru go-impl go-mode go-playground go-rename godoctor hound json-mode magit markdown-mode minimal-session-saver minimap protobuf-mode rainbow-mode sly sokoban terraform-mode which-key))
  '(show-paren-mode t)
  '(show-paren-style 'expression)
  '(uniquify-buffer-name-style 'forward nil (uniquify))
